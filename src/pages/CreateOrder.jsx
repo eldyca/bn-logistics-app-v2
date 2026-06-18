@@ -114,7 +114,7 @@ export default function CreateOrder() {
       <div className="viewsub">{t('order.subtitle')}</div>
 
       {/* SENDER */}
-      <div className="panel">
+      <div className="panel panel--sender">
         <div className="phead">{t('order.senderInfo')}</div>
         <div className="pbody">
           <div className="field"><label>{t('order.phone')} <span className="r">*</span></label>
@@ -143,7 +143,7 @@ export default function CreateOrder() {
       </div>
 
       {/* RECEIVER */}
-      <div className="panel">
+      <div className="panel panel--receiver">
         <div className="phead">{t('order.receiverInfo')}</div>
         <div className="pbody">
           <div className="grid">
@@ -183,7 +183,7 @@ export default function CreateOrder() {
 
       {/* BANK (chỉ khi chuyển khoản ngân hàng) */}
       {isBank && (
-        <div className="panel">
+        <div className="panel panel--bank">
           <div className="phead">{t('order.bankInfo')}</div>
           <div className="pbody">
             <div className="field"><label>{t('order.bankName')}</label>
@@ -203,7 +203,7 @@ export default function CreateOrder() {
       )}
 
       {/* TRANSACTION */}
-      <div className="panel">
+      <div className="panel panel--tx">
         <div className="phead">{t('order.txInfo')}</div>
         <div className="pbody">
           <div className="field"><label>{t('order.sendAmount')} <span className="r">*</span></label>
