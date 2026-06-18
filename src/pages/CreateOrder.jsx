@@ -5,6 +5,7 @@ import { useOrders } from '../context/OrdersContext'
 import { num, fmt } from '../lib/format'
 import AddressFields from '../components/AddressFields'
 import PayoutAddress from '../components/PayoutAddress'
+import { VN_BANKS } from '../lib/banks'
 
 const BANK_METHOD = 'Chuyển khoản ngân hàng'
 const CASH_METHOD = 'Tiền mặt'
@@ -57,7 +58,7 @@ export default function CreateOrder() {
   const setSenderField = (k, v) => set('sender', k, v)
   const setBenField = (k, v) => set('ben', k, v)
 
-  const isBank = form.ben.delivery === BANK_METHOD
+  const isBank = (form.ben.delivery || '').includes('Chuyển khoản')
   const isVnd = form.tx.cur === 'VND'
 
   const computed = useMemo(() => {
@@ -187,7 +188,11 @@ export default function CreateOrder() {
           <div className="phead">{t('order.bankInfo')}</div>
           <div className="pbody">
             <div className="field"><label>{t('order.bankName')}</label>
-              <input value={form.bank.name} onChange={(e) => set('bank', 'name', e.target.value)} placeholder="Vietcombank" /></div>
+              <input list="vn-bank-list" value={form.bank.name} onChange={(e) => set('bank', 'name', e.target.value)} placeholder="Vietcombank" autoComplete="off" />
+              <datalist id="vn-bank-list">
+                {VN_BANKS.map((b) => <option key={b} value={b} />)}
+              </datalist>
+            </div>
             <div className="grid">
               <div className="field tight"><label>{t('order.accountNumber')}</label>
                 <input inputMode="numeric" value={form.bank.account} onChange={(e) => set('bank', 'account', e.target.value)} /></div>

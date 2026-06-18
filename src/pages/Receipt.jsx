@@ -62,7 +62,7 @@ export default function Receipt() {
 
   const senderAddr = [order.sender.addr, order.sender.city, order.sender.state, order.sender.country].filter(Boolean).join(', ')
   const recvAddr = [order.ben.addr, order.ben.city, order.ben.state || order.ben.province, order.ben.country].filter(Boolean).join(', ')
-  const isBank = order.ben.delivery === 'Chuyển khoản ngân hàng'
+  const isBank = (order.ben.delivery || '').includes('Chuyển khoản')
 
   function exportPdf() {
     downloadReceiptPdf({ company, order, employee: order.createdByEmail || user?.email })

@@ -143,10 +143,10 @@ tr:last-child td{border-bottom:none}
 
 /* PC/Desktop ≥1024px: 3 khối chính cùng 1 hàng, gọn trong 1 màn hình, nút căn giữa */
 @media(min-width:1024px){
-  .content:has(.order-form){max-width:1400px;padding:14px 20px 24px}
-  .order-form{grid-template-columns:1fr 1fr 1fr;gap:12px;align-items:start}
-  .order-form>.viewtitle{font-size:17px;margin-bottom:2px;grid-row:1}
-  .order-form>.viewsub{font-size:12px;margin-bottom:6px;grid-row:2}
+  .content:has(.order-form){max-width:1680px;padding:12px 24px 16px}
+  .order-form{grid-template-columns:1fr 1fr 1fr;gap:10px;align-items:start}
+  .order-form>.viewtitle{font-size:16px;margin-bottom:1px;grid-row:1}
+  .order-form>.viewsub{font-size:11.5px;margin-bottom:4px;grid-row:2}
 
   /* Người gửi | Người nhận | Giao dịch -> cùng hàng; Ngân hàng nằm dưới Người nhận */
   .panel--sender{grid-column:1;grid-row:3}
@@ -154,25 +154,25 @@ tr:last-child td{border-bottom:none}
   .panel--tx{grid-column:3;grid-row:3}
   .panel--bank{grid-column:2;grid-row:4}
 
-  /* Card gọn */
-  .order-form>.panel{margin-bottom:8px}
-  .order-form .phead{padding:8px 12px;font-size:11.5px}
-  .order-form .pbody{padding:12px}
-  .order-form .field{gap:3px;margin-bottom:8px}
-  .order-form [style*="margin-top"]{margin-top:8px!important}
-  .order-form label{font-size:11px}
+  /* Card gọn, các section sát nhau */
+  .order-form>.panel{margin-bottom:0;border-radius:10px}
+  .order-form .phead{padding:6px 10px;font-size:11px}
+  .order-form .pbody{padding:10px}
+  .order-form .field{gap:2px;margin-bottom:6px}
+  .order-form [style*="margin-top"]{margin-top:6px!important}
+  .order-form label{font-size:10.5px}
 
-  /* Input height 36px, textarea 60px */
-  .order-form input,.order-form select{height:36px;padding:0 10px;font-size:13px;border-radius:7px}
-  .order-form textarea{height:60px;min-height:60px;padding:7px 10px;font-size:13px;border-radius:7px}
+  /* Input height ~34px, textarea gọn 50px */
+  .order-form input,.order-form select{height:34px;padding:0 9px;font-size:13px;border-radius:7px}
+  .order-form textarea{height:50px;min-height:50px;padding:6px 9px;font-size:13px;border-radius:7px}
   .order-form .grid,.order-form .grid-3{gap:8px}
   .order-form .hint{font-size:10px}
-  .order-form .inunit input{height:36px}
-  .order-form .inunit .unit{padding:0 10px;font-size:12px}
+  .order-form .inunit input{height:34px}
+  .order-form .inunit .unit{padding:0 9px;font-size:12px}
 
-  /* Thanh nút: 1 hàng ngang, căn giữa, cuối form */
+  /* Thanh nút: 2 nút ngang dài, căn giữa cuối form */
   .order-form>.btn-row{grid-column:1 / -1;display:flex;justify-content:center;gap:16px;margin-top:10px}
-  .order-form>.btn-row .btn{flex:0 0 auto;width:220px;height:48px;font-size:15px}
+  .order-form>.btn-row .btn{flex:0 0 auto;width:240px;height:46px;font-size:15px}
 }
 
 /* ===== Receipt (A4) ===== */
