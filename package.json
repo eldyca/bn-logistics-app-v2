@@ -1,7 +1,7 @@
 {
   "name": "he-thong-chuyen-tien",
   "private": true,
-  "version": "2.0.0",
+  "version": "2.1.0",
   "type": "module",
   "description": "Hệ thống quản lý chuyển tiền (React + Vite + Supabase, multi-tenant, i18n)",
   "scripts": {
@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.4",
+    "html2canvas": "^1.4.1",
     "i18next": "^23.15.1",
     "jspdf": "^2.5.2",
     "react": "^18.3.1",

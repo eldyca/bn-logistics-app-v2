@@ -1,5 +1,8 @@
 {
-  "app": { "title": "Hệ thống chuyển tiền", "subtitle": "Hệ thống nội bộ" },
+  "app": {
+    "title": "Hệ thống chuyển tiền",
+    "subtitle": "Hệ thống nội bộ"
+  },
   "nav": {
     "home": "Trang chủ",
     "orders": "Quản lý đơn hàng",
@@ -87,7 +90,7 @@
     "charge": "Phí (Charge)",
     "commission": "Hoa hồng",
     "fee": "Phí giao dịch",
-    "tax": "Thuế (1%)",
+    "tax": "Thuế",
     "paymentMethod": "Hình thức thanh toán",
     "status": "Trạng thái",
     "total": "Tổng cộng",
@@ -96,7 +99,14 @@
     "save": "Lưu đơn",
     "update": "Cập nhật đơn",
     "saving": "Đang lưu…",
-    "fillRequired": "Vui lòng nhập: "
+    "fillRequired": "Vui lòng nhập: ",
+    "taxPercent": "% Thuế",
+    "feePercent": "% Phí giao dịch",
+    "majorCustomer": "Khách hàng lớn",
+    "note1": "Ghi chú 1",
+    "note2": "Ghi chú 2",
+    "note3": "Ghi chú 3",
+    "note4": "Ghi chú 4"
   },
   "status": {
     "pending": "Chờ xử lý",
@@ -109,7 +119,11 @@
     "pickup": "Nhận tại quầy",
     "bank": "Chuyển khoản ngân hàng"
   },
-  "payment": { "cash": "Tiền mặt", "transfer": "Chuyển khoản", "card": "Thẻ" },
+  "payment": {
+    "cash": "Tiền mặt",
+    "transfer": "Chuyển khoản",
+    "card": "Thẻ"
+  },
   "search": {
     "title": "Tìm kiếm",
     "button": "Tìm kiếm",
@@ -137,7 +151,10 @@
     "receiversTitle": "Tìm người nhận",
     "receiversSub": "Tra cứu theo tên, SĐT, tỉnh/thành, ngân hàng hoặc số tài khoản."
   },
-  "orderStatusPage": { "title": "Trạng thái đơn", "subtitle": "Cập nhật trạng thái xử lý của từng đơn." },
+  "orderStatusPage": {
+    "title": "Trạng thái đơn",
+    "subtitle": "Cập nhật trạng thái xử lý của từng đơn."
+  },
   "reports": {
     "summaryTitle": "Báo cáo tổng hợp",
     "summarySub": "Thống kê toàn bộ giao dịch.",
@@ -155,8 +172,14 @@
     "statementSub": "Tổng kết tài chính theo các khoản."
   },
   "table": {
-    "code": "Mã", "date": "Ngày", "sender": "Người gửi", "receiver": "Người nhận",
-    "send": "Tiền gửi", "receive": "Tiền nhận", "total": "Tổng", "status": "Trạng thái"
+    "code": "Mã",
+    "date": "Ngày",
+    "sender": "Người gửi",
+    "receiver": "Người nhận",
+    "send": "Tiền gửi",
+    "receive": "Tiền nhận",
+    "total": "Tổng",
+    "status": "Trạng thái"
   },
   "receipt": {
     "title": "BIÊN NHẬN CHUYỂN TIỀN",

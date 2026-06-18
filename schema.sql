@@ -373,3 +373,21 @@ alter table public.receivers add column if not exists country text default 'Viet
 alter table public.receivers add column if not exists state   text;
 alter table public.receivers add column if not exists city    text;
 alter table public.receivers add column if not exists zip     text;
+
+-- =====================================================================
+-- Cột bổ sung cho orders: % thuế / % phí giao dịch + số tiền tính ra,
+-- và thông tin "Khách hàng lớn / Major Customer". (xem migrations/)
+-- =====================================================================
+alter table public.orders add column if not exists tax_percent             numeric(9,4) not null default 0;
+alter table public.orders add column if not exists transaction_fee_percent numeric(9,4) not null default 0;
+alter table public.orders add column if not exists tax_amount              numeric(18,2) not null default 0;
+alter table public.orders add column if not exists transaction_fee_amount  numeric(18,2) not null default 0;
+alter table public.orders add column if not exists major_first_name  text;
+alter table public.orders add column if not exists major_last_name   text;
+alter table public.orders add column if not exists major_middle_name text;
+alter table public.orders add column if not exists major_phone       text;
+alter table public.orders add column if not exists major_address     text;
+alter table public.orders add column if not exists major_note_1      text;
+alter table public.orders add column if not exists major_note_2      text;
+alter table public.orders add column if not exists major_note_3      text;
+alter table public.orders add column if not exists major_note_4      text;

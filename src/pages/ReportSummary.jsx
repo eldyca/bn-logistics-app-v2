@@ -8,7 +8,7 @@ export default function ReportSummary() {
   const { orders } = useOrders()
   const send = orders.reduce((s, x) => s + x.tx.send, 0)
   const receive = orders.reduce((s, x) => s + x.tx.receive, 0)
-  const fee = orders.reduce((s, x) => s + x.tx.charge + x.tx.comm + x.tx.fee + x.tx.tax, 0)
+  const fee = orders.reduce((s, x) => s + x.tx.fee + x.tx.tax, 0)
   return (
     <>
       <div className="viewtitle">{t('reports.summaryTitle')}</div>

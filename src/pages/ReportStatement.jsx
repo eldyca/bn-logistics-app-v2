@@ -10,8 +10,6 @@ export default function ReportStatement() {
   const rows = [
     [t('home.totalSend'), f('send')],
     [t('reports.totalReceive'), f('receive')],
-    [t('order.charge'), f('charge')],
-    [t('order.commission'), f('comm')],
     [t('order.fee'), f('fee')],
     [t('order.tax'), f('tax')],
     [t('order.total'), f('total')],

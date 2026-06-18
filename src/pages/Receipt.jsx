@@ -6,6 +6,40 @@ import { fetchOrder } from '../lib/data'
 import { fmt, fdate } from '../lib/format'
 import { downloadReceiptPdf } from '../lib/receiptPdf'
 
+// Nhãn song ngữ Việt / English — luôn hiển thị cả hai bất kể ngôn ngữ đang chọn.
+export const RL = {
+  title: 'BIÊN NHẬN CHUYỂN TIỀN / TRANSFER RECEIPT',
+  orderCode: 'Mã đơn / Order Code',
+  date: 'Ngày tạo / Created Date',
+  time: 'Giờ / Time',
+  employee: 'Nhân viên / Employee',
+  sender: 'NGƯỜI GỬI / SENDER',
+  receiver: 'NGƯỜI NHẬN / RECEIVER',
+  name: 'Họ tên / Name',
+  phone: 'Điện thoại / Phone',
+  address: 'Địa chỉ / Address',
+  transfer: 'CHI TIẾT GIAO DỊCH / TRANSFER DETAILS',
+  sendAmount: 'Số tiền gửi / Send Amount',
+  rate: 'Tỷ giá / Rate',
+  receiveAmount: 'Số tiền nhận / Receive Amount',
+  tax: 'Thuế / Tax',
+  fee: 'Phí giao dịch / Transaction Fee',
+  delivery: 'Hình thức nhận / Delivery Method',
+  status: 'Trạng thái / Status',
+  notes: 'Ghi chú / Notes',
+  total: 'Tổng cộng / Total',
+  senderSignature: 'Chữ ký người gửi / Sender Signature',
+  companySignature: 'Chữ ký công ty / Company Signature',
+  thanks: 'Cảm ơn quý khách. / Thank you for your business.',
+}
+
+export const STATUS_BI = {
+  pending: 'Chờ xử lý / Pending',
+  processing: 'Đang xử lý / Processing',
+  completed: 'Hoàn tất / Completed',
+  cancelled: 'Đã huỷ / Cancelled',
+}
+
 export default function Receipt() {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -21,12 +55,11 @@ export default function Receipt() {
   if (err) return <div className="banner err">{err}</div>
   if (!order) return <div className="empty">{t('common.loading')}</div>
 
-  const fee = order.tx.charge + order.tx.comm + order.tx.fee + order.tx.tax
   const senderAddr = [order.sender.addr, order.sender.city, order.sender.state, order.sender.country].filter(Boolean).join(', ')
   const recvAddr = [order.ben.addr, order.ben.city, order.ben.state || order.ben.province, order.ben.country].filter(Boolean).join(', ')
 
   function exportPdf() {
-    downloadReceiptPdf({ company, order, t, employee: order.createdByEmail || user?.email })
+    downloadReceiptPdf({ company, order, employee: order.createdByEmail || user?.email })
   }
 
   return (
@@ -43,51 +76,55 @@ export default function Receipt() {
           <div className="r-company">
             <div className="r-cname">{company?.name || 'Company'}</div>
             {company?.address ? <div>{company.address}</div> : null}
-            {company?.phone ? <div>{t('receipt.phone')}: {company.phone}</div> : null}
+            {company?.phone ? <div>{RL.phone}: {company.phone}</div> : null}
           </div>
         </div>
         <hr />
-        <h2 className="r-title">{t('receipt.title')}</h2>
+        <h2 className="r-title">{RL.title}</h2>
 
         <div className="r-meta">
-          <div><span>{t('receipt.transactionNo')}:</span> <strong>{order.code}</strong></div>
-          <div><span>{t('receipt.date')}:</span> {fdate(order.createdAt)}</div>
-          <div><span>{t('receipt.time')}:</span> {new Date(order.createdAt).toLocaleTimeString()}</div>
-          <div><span>{t('receipt.employee')}:</span> {order.createdByEmail || user?.email}</div>
+          <div><span>{RL.orderCode}:</span> <strong>{order.code}</strong></div>
+          <div><span>{RL.date}:</span> {fdate(order.createdAt)}</div>
+          <div><span>{RL.time}:</span> {new Date(order.createdAt).toLocaleTimeString()}</div>
+          <div><span>{RL.employee}:</span> {order.createdByEmail || user?.email}</div>
         </div>
 
         <div className="r-parties">
           <div className="r-party">
-            <h3>{t('receipt.sender')}</h3>
-            <div>{t('receipt.name')}: {order.sender.first} {order.sender.last}</div>
-            <div>{t('receipt.phone')}: {order.sender.phone}</div>
-            <div>{t('receipt.address')}: {senderAddr}</div>
+            <h3>{RL.sender}</h3>
+            <div>{RL.name}: {order.sender.first} {order.sender.last}</div>
+            <div>{RL.phone}: {order.sender.phone}</div>
+            <div>{RL.address}: {senderAddr}</div>
           </div>
           <div className="r-party">
-            <h3>{t('receipt.receiver')}</h3>
-            <div>{t('receipt.name')}: {order.ben.first} {order.ben.last}</div>
-            <div>{t('receipt.phone')}: {order.ben.phone}</div>
-            <div>{t('receipt.address')}: {recvAddr}</div>
+            <h3>{RL.receiver}</h3>
+            <div>{RL.name}: {order.ben.first} {order.ben.last}</div>
+            <div>{RL.phone}: {order.ben.phone}</div>
+            <div>{RL.address}: {recvAddr}</div>
           </div>
         </div>
 
-        <h3 className="r-section">{t('receipt.transfer')}</h3>
+        <h3 className="r-section">{RL.transfer}</h3>
         <table className="r-table">
           <tbody>
-            <tr><td>{t('receipt.amount')}</td><td>{fmt(order.tx.send)}</td></tr>
-            <tr><td>{t('receipt.fee')}</td><td>{fmt(fee)}</td></tr>
-            <tr><td>{t('receipt.delivery')}</td><td>{order.ben.delivery}</td></tr>
-            <tr><td>{t('receipt.notes')}</td><td>{order.tx.memo}</td></tr>
-            <tr className="r-total"><td>{t('receipt.total')}</td><td>{fmt(order.tx.total)}</td></tr>
+            <tr><td>{RL.sendAmount}</td><td>{fmt(order.tx.send)}</td></tr>
+            <tr><td>{RL.rate}</td><td>{fmt(order.tx.rate)}</td></tr>
+            <tr><td>{RL.receiveAmount}</td><td>{fmt(order.tx.receive)}</td></tr>
+            <tr><td>{RL.tax}</td><td>{fmt(order.tx.tax)}</td></tr>
+            <tr><td>{RL.fee}</td><td>{fmt(order.tx.fee)}</td></tr>
+            <tr><td>{RL.delivery}</td><td>{order.ben.delivery}</td></tr>
+            <tr><td>{RL.status}</td><td>{STATUS_BI[order.status] || order.status}</td></tr>
+            <tr><td>{RL.notes}</td><td>{order.tx.memo}</td></tr>
+            <tr className="r-total"><td>{RL.total}</td><td>{fmt(order.tx.total)}</td></tr>
           </tbody>
         </table>
 
         <div className="r-signs">
-          <div><div className="r-sigline" /> {t('receipt.senderSignature')}</div>
-          <div><div className="r-sigline" /> {t('receipt.companySignature')}</div>
+          <div><div className="r-sigline" /> {RL.senderSignature}</div>
+          <div><div className="r-sigline" /> {RL.companySignature}</div>
         </div>
 
-        <div className="r-footer">{company?.receipt_footer || t('receipt.thanks')}</div>
+        <div className="r-footer">{company?.receipt_footer || RL.thanks}</div>
       </div>
     </>
   )

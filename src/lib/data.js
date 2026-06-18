@@ -33,24 +33,42 @@ function mapRow(row) {
       name: b.bank_name || '', account: b.account_number || '',
       holder: b.account_holder || '', branch: b.branch || '',
     },
-    tx: {
-      send: Number(tx.send_amount) || 0, rate: Number(tx.rate) || 0,
-      receive: Number(tx.receive_amount) || 0, charge: Number(tx.charge) || 0,
-      comm: Number(tx.commission) || 0, fee: Number(tx.fee) || 0,
-      tax: Number(tx.tax) || 0, pay: tx.payment_method || '',
-      total: Number(tx.total) || 0, memo: row.memo || '',
+    tx: (() => {
+      const send = Number(tx.send_amount) || 0
+      const taxPct = Number(row.tax_percent) || 0
+      const feePct = Number(row.transaction_fee_percent) || 0
+      const newTax = Number(row.tax_amount) || 0
+      const newFee = Number(row.transaction_fee_amount) || 0
+      // Đơn mới dùng cột trên orders; đơn cũ (chưa có dữ liệu mới) fallback về transactions
+      const hasNew = taxPct > 0 || feePct > 0 || newTax > 0 || newFee > 0
+      const tax = hasNew ? newTax : Number(tx.tax) || 0
+      const fee = hasNew ? newFee : Number(tx.fee) || 0
+      const total = Number(tx.total) || send + tax + fee
+      return {
+        send, rate: Number(tx.rate) || 0, receive: Number(tx.receive_amount) || 0,
+        taxPct, feePct, tax, fee,
+        charge: 0, comm: 0, // giữ khoá cũ (=0) để các nơi đọc cũ không lỗi
+        pay: tx.payment_method || '', total, memo: row.memo || '',
+      }
+    })(),
+    major: {
+      first: row.major_first_name || '', last: row.major_last_name || '',
+      middle: row.major_middle_name || '', phone: row.major_phone || '',
+      addr: row.major_address || '',
+      note1: row.major_note_1 || '', note2: row.major_note_2 || '',
+      note3: row.major_note_3 || '', note4: row.major_note_4 || '',
     },
   }
 }
 
-const ORDER_SELECT = `*, sender:senders(*), receiver:receivers(*), beneficiary:beneficiaries(*), transactions(*)`
+const ORDER_SELECT =
+  '*, sender:senders(*), receiver:receivers(*), beneficiary:beneficiaries(*), transactions(*), creator:users(email)'
+
 export async function fetchOrders() {
   const { data, error } = await supabase
     .from('orders')
     .select(ORDER_SELECT)
     .order('created_at', { ascending: false })
-console.log('ORDERS DATA', data)
-console.log('ORDERS ERROR', error)
   if (error) throw error
   return (data || []).map(mapRow)
 }
@@ -125,13 +143,20 @@ export async function createOrder(data) {
   const { data: order, error: e4 } = await supabase.from('orders').insert({
     ...base, code, status: data.status || 'pending',
     sender_id: sender.id, receiver_id: receiver.id, beneficiary_id: beneficiary.id, memo: data.tx.memo,
+    tax_percent: data.tx.taxPct, transaction_fee_percent: data.tx.feePct,
+    tax_amount: data.tx.tax, transaction_fee_amount: data.tx.fee,
+    major_first_name: data.major?.first, major_last_name: data.major?.last,
+    major_middle_name: data.major?.middle, major_phone: data.major?.phone,
+    major_address: data.major?.addr,
+    major_note_1: data.major?.note1, major_note_2: data.major?.note2,
+    major_note_3: data.major?.note3, major_note_4: data.major?.note4,
   }).select().single()
   if (e4) throw e4
 
   const { error: e5 } = await supabase.from('transactions').insert({
     ...base, order_id: order.id,
     send_amount: data.tx.send, rate: data.tx.rate, receive_amount: data.tx.receive,
-    charge: data.tx.charge, commission: data.tx.comm, fee: data.tx.fee, tax: data.tx.tax,
+    charge: 0, commission: 0, fee: data.tx.fee, tax: data.tx.tax,
     payment_method: data.tx.pay, total: data.tx.total,
   })
   if (e5) throw e5
@@ -169,11 +194,18 @@ export async function updateOrder(id, data) {
 
   await supabase.from('orders').update({
     status: data.status, memo: data.tx.memo, updated_at: new Date().toISOString(),
+    tax_percent: data.tx.taxPct, transaction_fee_percent: data.tx.feePct,
+    tax_amount: data.tx.tax, transaction_fee_amount: data.tx.fee,
+    major_first_name: data.major?.first, major_last_name: data.major?.last,
+    major_middle_name: data.major?.middle, major_phone: data.major?.phone,
+    major_address: data.major?.addr,
+    major_note_1: data.major?.note1, major_note_2: data.major?.note2,
+    major_note_3: data.major?.note3, major_note_4: data.major?.note4,
   }).eq('id', id)
 
   await supabase.from('transactions').update({
     send_amount: data.tx.send, rate: data.tx.rate, receive_amount: data.tx.receive,
-    charge: data.tx.charge, commission: data.tx.comm, fee: data.tx.fee, tax: data.tx.tax,
+    charge: 0, commission: 0, fee: data.tx.fee, tax: data.tx.tax,
     payment_method: data.tx.pay, total: data.tx.total,
   }).eq('order_id', id)
 

@@ -9,7 +9,8 @@ const EMPTY = {
   sender: { phone: '', first: '', last: '', middle: '', country: 'United States', state: '', city: '', zip: '', addr: '', msg: '' },
   ben: { phone: '', phone2: '', last: '', first: '', last2: '', first2: '', country: 'Vietnam', state: '', city: '', zip: '', province: '', delivery: 'Giao tận nhà', addr: '' },
   bank: { name: '', account: '', holder: '', branch: '' },
-  tx: { send: '0.00', rate: '1.00', charge: '0.00', comm: '0.00', fee: '0.00', pay: 'Tiền mặt', memo: '' },
+  tx: { send: '0.00', rate: '1.00', taxPct: '0', feePct: '0', pay: 'Tiền mặt', memo: '' },
+  major: { first: '', last: '', middle: '', phone: '', addr: '', note1: '', note2: '', note3: '', note4: '' },
   status: 'pending',
 }
 
@@ -32,7 +33,12 @@ export default function CreateOrder() {
           sender: { ...EMPTY.sender, ...r.sender },
           ben: { ...EMPTY.ben, ...r.ben },
           bank: { ...r.bank },
-          tx: { send: r.tx.send, rate: r.tx.rate, charge: r.tx.charge, comm: r.tx.comm, fee: r.tx.fee, pay: r.tx.pay, memo: r.tx.memo },
+          tx: {
+            send: r.tx.send, rate: r.tx.rate,
+            taxPct: r.tx.taxPct ?? 0, feePct: r.tx.feePct ?? 0,
+            pay: r.tx.pay, memo: r.tx.memo,
+          },
+          major: { ...EMPTY.major, ...(r.major || {}) },
         })
       }
     } else {
@@ -48,9 +54,10 @@ export default function CreateOrder() {
     const send = num(form.tx.send)
     const rate = num(form.tx.rate)
     const receive = send * rate
-    const tax = send * 0.01
-    const total = send + num(form.tx.charge) + num(form.tx.comm) + num(form.tx.fee) + tax
-    return { receive, tax, total }
+    const tax = send * (num(form.tx.taxPct) / 100)
+    const fee = send * (num(form.tx.feePct) / 100)
+    const total = send + tax + fee
+    return { receive, tax, fee, total }
   }, [form.tx])
 
   async function save() {
@@ -73,8 +80,16 @@ export default function CreateOrder() {
       bank: { ...form.bank },
       tx: {
         send: num(form.tx.send), rate: num(form.tx.rate), receive: computed.receive,
-        charge: num(form.tx.charge), comm: num(form.tx.comm), fee: num(form.tx.fee),
-        tax: computed.tax, pay: form.tx.pay, total: computed.total, memo: form.tx.memo.trim(),
+        taxPct: num(form.tx.taxPct), feePct: num(form.tx.feePct),
+        tax: computed.tax, fee: computed.fee,
+        pay: form.tx.pay, total: computed.total, memo: form.tx.memo.trim(),
+      },
+      major: {
+        first: form.major.first.trim(), last: form.major.last.trim(),
+        middle: form.major.middle.trim(), phone: form.major.phone.trim(),
+        addr: form.major.addr.trim(),
+        note1: form.major.note1.trim(), note2: form.major.note2.trim(),
+        note3: form.major.note3.trim(), note4: form.major.note4.trim(),
       },
     }
     setBusy(true)
@@ -168,6 +183,37 @@ export default function CreateOrder() {
         </div>
       </div>
 
+      {/* MAJOR CUSTOMER */}
+      <div className="panel">
+        <div className="phead">{t('order.majorCustomer')}</div>
+        <div className="pbody">
+          <div className="grid-3">
+            <div className="field tight"><label>{t('order.firstName')}</label>
+              <input value={form.major.first} onChange={(e) => set('major', 'first', e.target.value)} /></div>
+            <div className="field tight"><label>{t('order.lastName')}</label>
+              <input value={form.major.last} onChange={(e) => set('major', 'last', e.target.value)} /></div>
+            <div className="field tight"><label>{t('order.middleName')}</label>
+              <input value={form.major.middle} onChange={(e) => set('major', 'middle', e.target.value)} /></div>
+          </div>
+          <div className="field" style={{ marginTop: 12 }}><label>{t('order.phone')}</label>
+            <input type="tel" value={form.major.phone} onChange={(e) => set('major', 'phone', e.target.value)} /></div>
+          <div className="field full" style={{ marginTop: 12 }}><label>{t('order.address')}</label>
+            <input value={form.major.addr} onChange={(e) => set('major', 'addr', e.target.value)} /></div>
+          <div className="grid" style={{ marginTop: 12 }}>
+            <div className="field tight"><label>{t('order.note1')}</label>
+              <input value={form.major.note1} onChange={(e) => set('major', 'note1', e.target.value)} /></div>
+            <div className="field tight"><label>{t('order.note2')}</label>
+              <input value={form.major.note2} onChange={(e) => set('major', 'note2', e.target.value)} /></div>
+          </div>
+          <div className="grid" style={{ marginTop: 12 }}>
+            <div className="field tight"><label>{t('order.note3')}</label>
+              <input value={form.major.note3} onChange={(e) => set('major', 'note3', e.target.value)} /></div>
+            <div className="field tight"><label>{t('order.note4')}</label>
+              <input value={form.major.note4} onChange={(e) => set('major', 'note4', e.target.value)} /></div>
+          </div>
+        </div>
+      </div>
+
       {/* TRANSACTION */}
       <div className="panel">
         <div className="phead">{t('order.txInfo')}</div>
@@ -181,16 +227,16 @@ export default function CreateOrder() {
           <div className="field"><label>{t('order.receiveAmount')}</label>
             <input type="text" readOnly value={fmt(computed.receive)} /></div>
           <div className="grid">
-            <div className="field"><label>{t('order.charge')}</label>
-              <input type="number" min="0" step="0.01" value={form.tx.charge} onChange={(e) => set('tx', 'charge', e.target.value)} /></div>
-            <div className="field"><label>{t('order.commission')}</label>
-              <input type="number" min="0" step="0.01" value={form.tx.comm} onChange={(e) => set('tx', 'comm', e.target.value)} /></div>
+            <div className="field"><label>{t('order.taxPercent')}</label>
+              <input type="number" min="0" step="0.01" value={form.tx.taxPct} onChange={(e) => set('tx', 'taxPct', e.target.value)} /></div>
+            <div className="field"><label>{t('order.feePercent')}</label>
+              <input type="number" min="0" step="0.01" value={form.tx.feePct} onChange={(e) => set('tx', 'feePct', e.target.value)} /></div>
           </div>
           <div className="grid">
-            <div className="field"><label>{t('order.fee')}</label>
-              <input type="number" min="0" step="0.01" value={form.tx.fee} onChange={(e) => set('tx', 'fee', e.target.value)} /></div>
             <div className="field"><label>{t('order.tax')}</label>
               <input type="text" readOnly value={fmt(computed.tax)} /></div>
+            <div className="field"><label>{t('order.fee')}</label>
+              <input type="text" readOnly value={fmt(computed.fee)} /></div>
           </div>
           <div className="grid">
             <div className="field"><label>{t('order.paymentMethod')} <span className="r">*</span></label>

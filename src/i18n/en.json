@@ -1,5 +1,8 @@
 {
-  "app": { "title": "Money Transfer System", "subtitle": "Internal system" },
+  "app": {
+    "title": "Money Transfer System",
+    "subtitle": "Internal system"
+  },
   "nav": {
     "home": "Home",
     "orders": "Order Management",
@@ -87,7 +90,7 @@
     "charge": "Charge",
     "commission": "Commission",
     "fee": "Transaction fee",
-    "tax": "Tax (1%)",
+    "tax": "Tax",
     "paymentMethod": "Payment method",
     "status": "Status",
     "total": "Grand total",
@@ -96,7 +99,14 @@
     "save": "Save order",
     "update": "Update order",
     "saving": "Saving…",
-    "fillRequired": "Please enter: "
+    "fillRequired": "Please enter: ",
+    "taxPercent": "Tax %",
+    "feePercent": "Transaction fee %",
+    "majorCustomer": "Major Customer",
+    "note1": "Note 1",
+    "note2": "Note 2",
+    "note3": "Note 3",
+    "note4": "Note 4"
   },
   "status": {
     "pending": "Pending",
@@ -109,7 +119,11 @@
     "pickup": "Pickup at counter",
     "bank": "Bank transfer"
   },
-  "payment": { "cash": "Cash", "transfer": "Bank transfer", "card": "Card" },
+  "payment": {
+    "cash": "Cash",
+    "transfer": "Bank transfer",
+    "card": "Card"
+  },
   "search": {
     "title": "Search",
     "button": "Search",
@@ -137,7 +151,10 @@
     "receiversTitle": "Search Receivers",
     "receiversSub": "Look up by name, phone, province, bank or account."
   },
-  "orderStatusPage": { "title": "Order Status", "subtitle": "Update the processing status of each order." },
+  "orderStatusPage": {
+    "title": "Order Status",
+    "subtitle": "Update the processing status of each order."
+  },
   "reports": {
     "summaryTitle": "Summary Report",
     "summarySub": "Statistics across all transactions.",
@@ -155,8 +172,14 @@
     "statementSub": "Financial totals by line item."
   },
   "table": {
-    "code": "Code", "date": "Date", "sender": "Sender", "receiver": "Receiver",
-    "send": "Sent", "receive": "Received", "total": "Total", "status": "Status"
+    "code": "Code",
+    "date": "Date",
+    "sender": "Sender",
+    "receiver": "Receiver",
+    "send": "Sent",
+    "receive": "Received",
+    "total": "Total",
+    "status": "Status"
   },
   "receipt": {
     "title": "TRANSFER RECEIPT",

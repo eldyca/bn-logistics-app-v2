@@ -31,18 +31,21 @@ export function exportOrders(orders) {
     'NG_Ho', 'NG_Ten', 'NG_SDT', 'NG_TP', 'NG_DiaChi',
     'NN_Ho', 'NN_Ten', 'NN_SDT', 'NN_Tinh', 'NN_HinhThucNhan', 'NN_DiaChi',
     'NganHang', 'SoTaiKhoan', 'ChuTaiKhoan', 'ChiNhanh',
-    'TienGui', 'TyGia', 'TienNhan', 'Phi', 'HoaHong', 'PhiGD', 'Thue',
+    'TienGui', 'TyGia', 'TienNhan', 'PhanTramThue', 'Thue', 'PhanTramPhiGD', 'PhiGD',
     'ThanhToan', 'TongCong', 'GhiChu',
+    'KHLon_Ho', 'KHLon_Ten', 'KHLon_SDT',
   ]
   const rows = orders.map((x) => {
     const bk = x.bank || {}
+    const mj = x.major || {}
     return [
       x.code, ftime(x.createdAt), STATUS_LABELS[x.status],
       x.sender.first, x.sender.last, x.sender.phone, x.sender.city, x.sender.addr,
       x.ben.last, x.ben.first, x.ben.phone, x.ben.province, x.ben.delivery, x.ben.addr,
       bk.name || '', bk.account || '', bk.holder || '', bk.branch || '',
-      x.tx.send, x.tx.rate, x.tx.receive, x.tx.charge, x.tx.comm, x.tx.fee, x.tx.tax,
+      x.tx.send, x.tx.rate, x.tx.receive, x.tx.taxPct, x.tx.tax, x.tx.feePct, x.tx.fee,
       x.tx.pay, x.tx.total, x.tx.memo,
+      mj.last || '', mj.first || '', mj.phone || '',
     ]
   })
   download(
@@ -57,8 +60,6 @@ export function exportStatement(orders) {
     ['Khoan', 'SoTien'],
     ['Tong tien gui', fmt(f('send'))],
     ['Tong tien nhan', fmt(f('receive'))],
-    ['Tong phi', fmt(f('charge'))],
-    ['Tong hoa hong', fmt(f('comm'))],
     ['Tong phi GD', fmt(f('fee'))],
     ['Tong thue', fmt(f('tax'))],
     ['Tong cong', fmt(f('total'))],

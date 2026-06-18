@@ -12,7 +12,7 @@ export default function Home() {
 
   const pending = orders.filter((o) => o.status === 'pending' || o.status === 'processing').length
   const send = orders.reduce((s, x) => s + x.tx.send, 0)
-  const fee = orders.reduce((s, x) => s + x.tx.charge + x.tx.comm + x.tx.fee + x.tx.tax, 0)
+  const fee = orders.reduce((s, x) => s + x.tx.fee + x.tx.tax, 0)
   const recent = orders.slice(0, 5)
 
   return (
