@@ -103,7 +103,8 @@ async function nextCode(company_id) {
     .select('id', { count: 'exact', head: true })
     .eq('company_id', company_id)
   const seq = (count || 0) + 1
-  return 'GD' + new Date().toISOString().slice(2, 10).replace(/-/g, '') + '-' + String(seq).padStart(3, '0')
+  const ymd = new Date().toISOString().slice(0, 10).replace(/-/g, '')
+  return 'BN-' + ymd + '-' + String(seq).padStart(4, '0')
 }
 
 export async function createOrder(data) {

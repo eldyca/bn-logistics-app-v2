@@ -1,7 +1,7 @@
-// Xuất biên nhận ra PDF A4 bằng cách "chụp" đúng phần biên nhận đang hiển thị
-// trên màn hình (#receipt-sheet). Cách này giữ NGUYÊN layout song ngữ và hiển
-// thị đúng dấu tiếng Việt (font hệ thống của trình duyệt), khớp với bản in.
-// jspdf + html2canvas được nạp động -> chỉ tải khi người dùng bấm Xuất PDF.
+// Xuất biên nhận ra PDF khổ Letter (8.5 x 11 inch) bằng cách "chụp" phần biên
+// nhận đang hiển thị (#receipt-sheet). Giữ nguyên layout + dấu tiếng Việt, luôn
+// co vừa GỌN trong 1 trang (contain), không tràn trang, không cắt chữ.
+// jspdf + html2canvas nạp động -> chỉ tải khi bấm Tải PDF.
 export async function downloadReceiptPdf({ order } = {}) {
   const el = document.getElementById('receipt-sheet')
   if (!el) return
@@ -18,42 +18,21 @@ export async function downloadReceiptPdf({ order } = {}) {
     logging: false,
   })
 
-  const doc = new jsPDF({ unit: 'mm', format: 'a4' })
-  const pageW = 210
-  const pageH = 297
-  const margin = 10
+  // Letter: 215.9 x 279.4 mm
+  const doc = new jsPDF({ unit: 'mm', format: 'letter' })
+  const pageW = 215.9
+  const pageH = 279.4
+  const margin = 8
   const maxW = pageW - margin * 2
   const maxH = pageH - margin * 2
 
-  // Kích thước ảnh (mm) nếu vừa theo chiều rộng
-  let w = maxW
-  let h = (canvas.height * w) / canvas.width
+  // Co vừa cả chiều rộng và chiều cao (contain) -> luôn 1 trang
+  const ratio = Math.min(maxW / canvas.width, maxH / canvas.height)
+  const w = canvas.width * ratio
+  const h = canvas.height * ratio
+  const x = (pageW - w) / 2
+  const y = margin
 
-  if (h <= maxH) {
-    // Vừa trong 1 trang: căn giữa theo chiều rộng
-    doc.addImage(canvas.toDataURL('image/png'), 'PNG', margin, margin, w, h)
-  } else {
-    // Cao hơn 1 trang: cắt ảnh thành nhiều trang A4
-    const pxPerMm = canvas.width / w
-    const pageHpx = maxH * pxPerMm
-    let renderedPx = 0
-    let page = 0
-    while (renderedPx < canvas.height) {
-      const slicePx = Math.min(pageHpx, canvas.height - renderedPx)
-      const slice = document.createElement('canvas')
-      slice.width = canvas.width
-      slice.height = slicePx
-      const ctx = slice.getContext('2d')
-      ctx.fillStyle = '#ffffff'
-      ctx.fillRect(0, 0, slice.width, slice.height)
-      ctx.drawImage(canvas, 0, renderedPx, canvas.width, slicePx, 0, 0, canvas.width, slicePx)
-      const sliceH = slicePx / pxPerMm
-      if (page > 0) doc.addPage()
-      doc.addImage(slice.toDataURL('image/png'), 'PNG', margin, margin, w, sliceH)
-      renderedPx += slicePx
-      page += 1
-    }
-  }
-
+  doc.addImage(canvas.toDataURL('image/png'), 'PNG', x, y, w, h)
   doc.save('receipt-' + (order?.code || 'order') + '.pdf')
 }
