@@ -5,6 +5,7 @@ import { useOrders } from '../context/OrdersContext'
 import { num, fmt } from '../lib/format'
 import AddressFields from '../components/AddressFields'
 import PayoutAddress from '../components/PayoutAddress'
+import CurrencyInput from '../components/CurrencyInput'
 import { VN_BANKS } from '../lib/banks'
 
 const BANK_METHOD = 'Chuyển khoản ngân hàng'
@@ -212,10 +213,7 @@ export default function CreateOrder() {
         <div className="phead">{t('order.txInfo')}</div>
         <div className="pbody">
           <div className="field"><label>{t('order.sendAmount')} <span className="r">*</span></label>
-            <div className="inunit">
-              <input type="number" min="0" step="0.01" value={form.tx.send} onChange={(e) => set('tx', 'send', e.target.value)} />
-              <span className="unit">USD</span>
-            </div>
+            <CurrencyInput value={form.tx.send} onChange={(v) => set('tx', 'send', v)} unit="USD" />
           </div>
           <div className="grid">
             <div className="field"><label>{t('order.receiveCurrency')}</label>
@@ -229,10 +227,7 @@ export default function CreateOrder() {
             )}
           </div>
           <div className="field"><label>{t('order.receiveAmount')}</label>
-            <div className="inunit">
-              <input type="text" readOnly value={fmt(computed.receive)} />
-              <span className="unit">{form.tx.cur}</span>
-            </div>
+            <CurrencyInput value={fmt(computed.receive)} unit={form.tx.cur} readOnly />
           </div>
           <div className="grid">
             <div className="field"><label>{t('order.taxPercent')}</label>
@@ -260,10 +255,7 @@ export default function CreateOrder() {
               </select></div>
           </div>
           <div className="field"><label>{t('order.total')}</label>
-            <div className="inunit">
-              <input type="text" readOnly value={fmt(computed.total)} style={{ fontWeight: 700 }} />
-              <span className="unit">USD</span>
-            </div>
+            <CurrencyInput value={fmt(computed.total)} unit="USD" readOnly bold />
           </div>
           <div className="field full tight"><label>{t('order.memo')}</label>
             <textarea value={form.tx.memo} onChange={(e) => set('tx', 'memo', e.target.value)} /></div>
