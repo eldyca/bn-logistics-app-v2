@@ -4,13 +4,16 @@ import { useTranslation } from 'react-i18next'
 import { useOrders } from '../context/OrdersContext'
 import { num, fmt } from '../lib/format'
 import AddressFields from '../components/AddressFields'
+import PayoutAddress from '../components/PayoutAddress'
+
+const BANK_METHOD = 'Chuyển khoản ngân hàng'
+const CASH_METHOD = 'Tiền mặt'
 
 const EMPTY = {
-  sender: { phone: '', first: '', last: '', middle: '', country: 'United States', state: '', city: '', zip: '', addr: '', msg: '' },
-  ben: { phone: '', phone2: '', last: '', first: '', last2: '', first2: '', country: 'Vietnam', state: '', city: '', zip: '', province: '', delivery: 'Giao tận nhà', addr: '' },
+  sender: { phone: '', first: '', last: '', middle: '', country: 'United States', state: '', city: '', zip: '', addr: '', msg: '', note: '' },
+  ben: { phone: '', phone2: '', last: '', first: '', last2: '', first2: '', country: 'Vietnam', state: '', city: '', zip: '', province: '', delivery: BANK_METHOD, addr: '', payoutAddr: '' },
   bank: { name: '', account: '', holder: '', branch: '' },
-  tx: { send: '0.00', rate: '1.00', taxPct: '0', feePct: '0', pay: 'Tiền mặt', memo: '' },
-  major: { first: '', last: '', middle: '', phone: '', addr: '', note1: '', note2: '', note3: '', note4: '' },
+  tx: { send: '0.00', rate: '1.00', cur: 'VND', taxPct: '1', feePct: '3', pay: 'Tiền mặt', memo: '' },
   status: 'pending',
 }
 
@@ -31,14 +34,18 @@ export default function CreateOrder() {
         setForm({
           status: r.status,
           sender: { ...EMPTY.sender, ...r.sender },
-          ben: { ...EMPTY.ben, ...r.ben },
-          bank: { ...r.bank },
+          ben: {
+            ...EMPTY.ben, ...r.ben,
+            delivery: [CASH_METHOD, BANK_METHOD].includes(r.ben.delivery)
+              ? r.ben.delivery
+              : (r.bank?.name ? BANK_METHOD : CASH_METHOD),
+          },
+          bank: { ...EMPTY.bank, ...r.bank },
           tx: {
-            send: r.tx.send, rate: r.tx.rate,
-            taxPct: r.tx.taxPct ?? 0, feePct: r.tx.feePct ?? 0,
+            send: r.tx.send, rate: r.tx.rate || 1, cur: r.tx.cur || 'VND',
+            taxPct: r.tx.taxPct ?? 1, feePct: r.tx.feePct ?? 3,
             pay: r.tx.pay, memo: r.tx.memo,
           },
-          major: { ...EMPTY.major, ...(r.major || {}) },
         })
       }
     } else {
@@ -50,10 +57,12 @@ export default function CreateOrder() {
   const setSenderField = (k, v) => set('sender', k, v)
   const setBenField = (k, v) => set('ben', k, v)
 
+  const isBank = form.ben.delivery === BANK_METHOD
+  const isVnd = form.tx.cur === 'VND'
+
   const computed = useMemo(() => {
     const send = num(form.tx.send)
-    const rate = num(form.tx.rate)
-    const receive = send * rate
+    const receive = form.tx.cur === 'USD' ? send : send * num(form.tx.rate)
     const tax = send * (num(form.tx.taxPct) / 100)
     const fee = send * (num(form.tx.feePct) / 100)
     const total = send + tax + fee
@@ -67,7 +76,6 @@ export default function CreateOrder() {
     if (!form.sender.addr.trim()) miss.push(t('order.address'))
     if (!form.ben.phone.trim()) miss.push(t('order.receiverInfo'))
     if (!form.ben.first.trim() || !form.ben.last.trim()) miss.push(t('order.firstName'))
-    if (!form.ben.addr.trim()) miss.push(t('order.address'))
     if (num(form.tx.send) <= 0) miss.push(t('order.sendAmount'))
     if (miss.length) {
       alert(t('order.fillRequired') + miss.join(', '))
@@ -77,19 +85,13 @@ export default function CreateOrder() {
       status: form.status,
       sender: { ...form.sender },
       ben: { ...form.ben },
-      bank: { ...form.bank },
+      bank: isBank ? { ...form.bank } : { name: '', account: '', holder: '', branch: '' },
       tx: {
-        send: num(form.tx.send), rate: num(form.tx.rate), receive: computed.receive,
+        send: num(form.tx.send), rate: isVnd ? num(form.tx.rate) : 1, receive: computed.receive,
+        cur: form.tx.cur,
         taxPct: num(form.tx.taxPct), feePct: num(form.tx.feePct),
         tax: computed.tax, fee: computed.fee,
         pay: form.tx.pay, total: computed.total, memo: form.tx.memo.trim(),
-      },
-      major: {
-        first: form.major.first.trim(), last: form.major.last.trim(),
-        middle: form.major.middle.trim(), phone: form.major.phone.trim(),
-        addr: form.major.addr.trim(),
-        note1: form.major.note1.trim(), note2: form.major.note2.trim(),
-        note3: form.major.note3.trim(), note4: form.major.note4.trim(),
       },
     }
     setBusy(true)
@@ -107,7 +109,7 @@ export default function CreateOrder() {
   const msgLeft = 75 - (form.sender.msg?.length || 0)
 
   return (
-    <>
+    <div className="order-form">
       <div className="viewtitle">{editing ? t('order.editTitle') : t('order.createTitle')}</div>
       <div className="viewsub">{t('order.subtitle')}</div>
 
@@ -132,6 +134,10 @@ export default function CreateOrder() {
             <label>{t('order.message')}</label>
             <textarea maxLength={75} value={form.sender.msg} onChange={(e) => set('sender', 'msg', e.target.value)} />
             <span className="hint">{msgLeft} {t('order.charsLeft')}</span>
+          </div>
+          <div className="field full tight" style={{ marginTop: 12 }}>
+            <label>{t('order.senderNote')}</label>
+            <textarea value={form.sender.note} onChange={(e) => set('sender', 'note', e.target.value)} />
           </div>
         </div>
       </div>
@@ -158,74 +164,71 @@ export default function CreateOrder() {
           <div className="field" style={{ marginTop: 12 }}>
             <label>{t('order.deliveryMethod')}</label>
             <select value={form.ben.delivery} onChange={(e) => set('ben', 'delivery', e.target.value)}>
-              <option>Giao tận nhà</option><option>Nhận tại quầy</option><option>Chuyển khoản ngân hàng</option>
+              <option>{CASH_METHOD}</option>
+              <option>{BANK_METHOD}</option>
             </select>
           </div>
+          {!isBank && (
+            <div className="field full" style={{ marginTop: 12 }}>
+              <label>{t('order.payoutAddress')}</label>
+              <PayoutAddress
+                value={form.ben.payoutAddr}
+                onChange={(v) => set('ben', 'payoutAddr', v)}
+                placeholder="14391 Deanann Pl, Garden Grove, CA 92843"
+              />
+            </div>
+          )}
         </div>
       </div>
 
-      {/* BANK */}
-      <div className="panel">
-        <div className="phead">{t('order.bankInfo')}</div>
-        <div className="pbody">
-          <div className="field"><label>{t('order.bankName')}</label>
-            <input value={form.bank.name} onChange={(e) => set('bank', 'name', e.target.value)} placeholder="Vietcombank" /></div>
-          <div className="grid">
-            <div className="field tight"><label>{t('order.accountNumber')}</label>
-              <input inputMode="numeric" value={form.bank.account} onChange={(e) => set('bank', 'account', e.target.value)} /></div>
-            <div className="field tight"><label>{t('order.accountHolder')}</label>
-              <input value={form.bank.holder} onChange={(e) => set('bank', 'holder', e.target.value)} /></div>
-          </div>
-          <div className="field full" style={{ marginTop: 12 }}>
-            <label>{t('order.branch')}</label>
-            <input value={form.bank.branch} onChange={(e) => set('bank', 'branch', e.target.value)} />
-          </div>
-        </div>
-      </div>
-
-      {/* MAJOR CUSTOMER */}
-      <div className="panel">
-        <div className="phead">{t('order.majorCustomer')}</div>
-        <div className="pbody">
-          <div className="grid-3">
-            <div className="field tight"><label>{t('order.firstName')}</label>
-              <input value={form.major.first} onChange={(e) => set('major', 'first', e.target.value)} /></div>
-            <div className="field tight"><label>{t('order.lastName')}</label>
-              <input value={form.major.last} onChange={(e) => set('major', 'last', e.target.value)} /></div>
-            <div className="field tight"><label>{t('order.middleName')}</label>
-              <input value={form.major.middle} onChange={(e) => set('major', 'middle', e.target.value)} /></div>
-          </div>
-          <div className="field" style={{ marginTop: 12 }}><label>{t('order.phone')}</label>
-            <input type="tel" value={form.major.phone} onChange={(e) => set('major', 'phone', e.target.value)} /></div>
-          <div className="field full" style={{ marginTop: 12 }}><label>{t('order.address')}</label>
-            <input value={form.major.addr} onChange={(e) => set('major', 'addr', e.target.value)} /></div>
-          <div className="grid" style={{ marginTop: 12 }}>
-            <div className="field tight"><label>{t('order.note1')}</label>
-              <input value={form.major.note1} onChange={(e) => set('major', 'note1', e.target.value)} /></div>
-            <div className="field tight"><label>{t('order.note2')}</label>
-              <input value={form.major.note2} onChange={(e) => set('major', 'note2', e.target.value)} /></div>
-          </div>
-          <div className="grid" style={{ marginTop: 12 }}>
-            <div className="field tight"><label>{t('order.note3')}</label>
-              <input value={form.major.note3} onChange={(e) => set('major', 'note3', e.target.value)} /></div>
-            <div className="field tight"><label>{t('order.note4')}</label>
-              <input value={form.major.note4} onChange={(e) => set('major', 'note4', e.target.value)} /></div>
+      {/* BANK (chỉ khi chuyển khoản ngân hàng) */}
+      {isBank && (
+        <div className="panel">
+          <div className="phead">{t('order.bankInfo')}</div>
+          <div className="pbody">
+            <div className="field"><label>{t('order.bankName')}</label>
+              <input value={form.bank.name} onChange={(e) => set('bank', 'name', e.target.value)} placeholder="Vietcombank" /></div>
+            <div className="grid">
+              <div className="field tight"><label>{t('order.accountNumber')}</label>
+                <input inputMode="numeric" value={form.bank.account} onChange={(e) => set('bank', 'account', e.target.value)} /></div>
+              <div className="field tight"><label>{t('order.accountHolder')}</label>
+                <input value={form.bank.holder} onChange={(e) => set('bank', 'holder', e.target.value)} /></div>
+            </div>
+            <div className="field full" style={{ marginTop: 12 }}>
+              <label>{t('order.branch')}</label>
+              <input value={form.bank.branch} onChange={(e) => set('bank', 'branch', e.target.value)} />
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* TRANSACTION */}
       <div className="panel">
         <div className="phead">{t('order.txInfo')}</div>
         <div className="pbody">
+          <div className="field"><label>{t('order.sendAmount')} <span className="r">*</span></label>
+            <div className="inunit">
+              <input type="number" min="0" step="0.01" value={form.tx.send} onChange={(e) => set('tx', 'send', e.target.value)} />
+              <span className="unit">USD</span>
+            </div>
+          </div>
           <div className="grid">
-            <div className="field"><label>{t('order.sendAmount')} <span className="r">*</span></label>
-              <input type="number" min="0" step="0.01" value={form.tx.send} onChange={(e) => set('tx', 'send', e.target.value)} /></div>
-            <div className="field"><label>{t('order.rate')}</label>
-              <input type="number" min="0" step="0.0001" value={form.tx.rate} onChange={(e) => set('tx', 'rate', e.target.value)} /></div>
+            <div className="field"><label>{t('order.receiveCurrency')}</label>
+              <select value={form.tx.cur} onChange={(e) => set('tx', 'cur', e.target.value)}>
+                <option value="VND">VND</option>
+                <option value="USD">USD</option>
+              </select></div>
+            {isVnd && (
+              <div className="field"><label>{t('order.rate')}</label>
+                <input type="number" min="0" step="0.0001" value={form.tx.rate} onChange={(e) => set('tx', 'rate', e.target.value)} /></div>
+            )}
           </div>
           <div className="field"><label>{t('order.receiveAmount')}</label>
-            <input type="text" readOnly value={fmt(computed.receive)} /></div>
+            <div className="inunit">
+              <input type="text" readOnly value={fmt(computed.receive)} />
+              <span className="unit">{form.tx.cur}</span>
+            </div>
+          </div>
           <div className="grid">
             <div className="field"><label>{t('order.taxPercent')}</label>
               <input type="number" min="0" step="0.01" value={form.tx.taxPct} onChange={(e) => set('tx', 'taxPct', e.target.value)} /></div>
@@ -252,7 +255,11 @@ export default function CreateOrder() {
               </select></div>
           </div>
           <div className="field"><label>{t('order.total')}</label>
-            <input type="text" readOnly value={fmt(computed.total)} style={{ fontWeight: 700 }} /></div>
+            <div className="inunit">
+              <input type="text" readOnly value={fmt(computed.total)} style={{ fontWeight: 700 }} />
+              <span className="unit">USD</span>
+            </div>
+          </div>
           <div className="field full tight"><label>{t('order.memo')}</label>
             <textarea value={form.tx.memo} onChange={(e) => set('tx', 'memo', e.target.value)} /></div>
         </div>
@@ -264,6 +271,6 @@ export default function CreateOrder() {
           {busy ? t('order.saving') : editing ? t('order.update') : t('order.save')}
         </button>
       </div>
-    </>
+    </div>
   )
 }

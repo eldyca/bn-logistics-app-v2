@@ -21,13 +21,15 @@ function mapRow(row) {
       phone: s.phone || '', first: s.first_name || '', last: s.last_name || '',
       middle: s.middle_name || '', country: s.country || '', state: s.state || '',
       city: s.city || '', zip: s.zip || '', addr: s.address || '', msg: s.message || '',
+      note: row.sender_note || '',
     },
     ben: {
       phone: r.phone || '', phone2: r.other_phone || '', last: r.last_name || '',
       first: r.first_name || '', last2: r.last_name2 || '', first2: r.first_name2 || '',
       country: r.country || '', state: r.state || '', city: r.city || '',
       zip: r.zip || '', province: r.province || r.state || '',
-      delivery: r.delivery_method || '', addr: r.address || '',
+      delivery: row.receive_method || r.delivery_method || '', addr: r.address || '',
+      payoutAddr: row.payout_address || '',
     },
     bank: {
       name: b.bank_name || '', account: b.account_number || '',
@@ -43,21 +45,15 @@ function mapRow(row) {
       const hasNew = taxPct > 0 || feePct > 0 || newTax > 0 || newFee > 0
       const tax = hasNew ? newTax : Number(tx.tax) || 0
       const fee = hasNew ? newFee : Number(tx.fee) || 0
-      const total = Number(tx.total) || send + tax + fee
+      const total = Number(row.total_amount) || Number(tx.total) || send + tax + fee
       return {
         send, rate: Number(tx.rate) || 0, receive: Number(tx.receive_amount) || 0,
+        cur: row.receive_currency || 'VND',
         taxPct, feePct, tax, fee,
         charge: 0, comm: 0, // giữ khoá cũ (=0) để các nơi đọc cũ không lỗi
         pay: tx.payment_method || '', total, memo: row.memo || '',
       }
     })(),
-    major: {
-      first: row.major_first_name || '', last: row.major_last_name || '',
-      middle: row.major_middle_name || '', phone: row.major_phone || '',
-      addr: row.major_address || '',
-      note1: row.major_note_1 || '', note2: row.major_note_2 || '',
-      note3: row.major_note_3 || '', note4: row.major_note_4 || '',
-    },
   }
 }
 
@@ -143,13 +139,13 @@ export async function createOrder(data) {
   const { data: order, error: e4 } = await supabase.from('orders').insert({
     ...base, code, status: data.status || 'pending',
     sender_id: sender.id, receiver_id: receiver.id, beneficiary_id: beneficiary.id, memo: data.tx.memo,
+    sender_note: data.sender.note || null,
+    receive_method: data.ben.delivery || null,
+    payout_address: data.ben.payoutAddr || null,
+    receive_currency: data.tx.cur || 'VND',
     tax_percent: data.tx.taxPct, transaction_fee_percent: data.tx.feePct,
     tax_amount: data.tx.tax, transaction_fee_amount: data.tx.fee,
-    major_first_name: data.major?.first, major_last_name: data.major?.last,
-    major_middle_name: data.major?.middle, major_phone: data.major?.phone,
-    major_address: data.major?.addr,
-    major_note_1: data.major?.note1, major_note_2: data.major?.note2,
-    major_note_3: data.major?.note3, major_note_4: data.major?.note4,
+    total_amount: data.tx.total,
   }).select().single()
   if (e4) throw e4
 
@@ -194,13 +190,13 @@ export async function updateOrder(id, data) {
 
   await supabase.from('orders').update({
     status: data.status, memo: data.tx.memo, updated_at: new Date().toISOString(),
+    sender_note: data.sender.note || null,
+    receive_method: data.ben.delivery || null,
+    payout_address: data.ben.payoutAddr || null,
+    receive_currency: data.tx.cur || 'VND',
     tax_percent: data.tx.taxPct, transaction_fee_percent: data.tx.feePct,
     tax_amount: data.tx.tax, transaction_fee_amount: data.tx.fee,
-    major_first_name: data.major?.first, major_last_name: data.major?.last,
-    major_middle_name: data.major?.middle, major_phone: data.major?.phone,
-    major_address: data.major?.addr,
-    major_note_1: data.major?.note1, major_note_2: data.major?.note2,
-    major_note_3: data.major?.note3, major_note_4: data.major?.note4,
+    total_amount: data.tx.total,
   }).eq('id', id)
 
   await supabase.from('transactions').update({

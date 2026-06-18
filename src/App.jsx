@@ -25,8 +25,10 @@ function Shell() {
   const [menuOpen, setMenuOpen] = useState(false)
   return (
     <>
-      <TopBar onToggleMenu={() => setMenuOpen((v) => !v)} />
-      <SideMenu open={menuOpen} onNavigate={() => setMenuOpen(false)} />
+      <header className="appbar">
+        <TopBar onToggleMenu={() => setMenuOpen((v) => !v)} />
+        <SideMenu open={menuOpen} onNavigate={() => setMenuOpen(false)} />
+      </header>
       <div className="content">
         <Routes>
           <Route path="/" element={<Home />} />

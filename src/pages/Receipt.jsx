@@ -25,6 +25,11 @@ export const RL = {
   tax: 'Thuế / Tax',
   fee: 'Phí giao dịch / Transaction Fee',
   delivery: 'Hình thức nhận / Delivery Method',
+  bankName: 'Ngân hàng / Bank',
+  accountNumber: 'Số tài khoản / Account No.',
+  accountHolder: 'Chủ tài khoản / Account Holder',
+  payout: 'Địa chỉ nhận tiền / Payout Address',
+  message: 'Lời nhắn / Message',
   status: 'Trạng thái / Status',
   notes: 'Ghi chú / Notes',
   total: 'Tổng cộng / Total',
@@ -57,6 +62,7 @@ export default function Receipt() {
 
   const senderAddr = [order.sender.addr, order.sender.city, order.sender.state, order.sender.country].filter(Boolean).join(', ')
   const recvAddr = [order.ben.addr, order.ben.city, order.ben.state || order.ben.province, order.ben.country].filter(Boolean).join(', ')
+  const isBank = order.ben.delivery === 'Chuyển khoản ngân hàng'
 
   function exportPdf() {
     downloadReceiptPdf({ company, order, employee: order.createdByEmail || user?.email })
@@ -107,15 +113,27 @@ export default function Receipt() {
         <h3 className="r-section">{RL.transfer}</h3>
         <table className="r-table">
           <tbody>
-            <tr><td>{RL.sendAmount}</td><td>{fmt(order.tx.send)}</td></tr>
-            <tr><td>{RL.rate}</td><td>{fmt(order.tx.rate)}</td></tr>
-            <tr><td>{RL.receiveAmount}</td><td>{fmt(order.tx.receive)}</td></tr>
-            <tr><td>{RL.tax}</td><td>{fmt(order.tx.tax)}</td></tr>
-            <tr><td>{RL.fee}</td><td>{fmt(order.tx.fee)}</td></tr>
+            <tr><td>{RL.sendAmount}</td><td>{fmt(order.tx.send)} USD</td></tr>
+            {order.tx.cur === 'VND' && (
+              <tr><td>{RL.rate}</td><td>{fmt(order.tx.rate)}</td></tr>
+            )}
+            <tr><td>{RL.receiveAmount}</td><td>{fmt(order.tx.receive)} {order.tx.cur}</td></tr>
+            <tr><td>{RL.tax}</td><td>{fmt(order.tx.tax)} USD</td></tr>
+            <tr><td>{RL.fee}</td><td>{fmt(order.tx.fee)} USD</td></tr>
             <tr><td>{RL.delivery}</td><td>{order.ben.delivery}</td></tr>
+            {isBank ? (
+              <>
+                <tr><td>{RL.bankName}</td><td>{order.bank.name}</td></tr>
+                <tr><td>{RL.accountNumber}</td><td>{order.bank.account}</td></tr>
+                <tr><td>{RL.accountHolder}</td><td>{order.bank.holder}</td></tr>
+              </>
+            ) : (
+              <tr><td>{RL.payout}</td><td>{order.ben.payoutAddr || recvAddr}</td></tr>
+            )}
             <tr><td>{RL.status}</td><td>{STATUS_BI[order.status] || order.status}</td></tr>
-            <tr><td>{RL.notes}</td><td>{order.tx.memo}</td></tr>
-            <tr className="r-total"><td>{RL.total}</td><td>{fmt(order.tx.total)}</td></tr>
+            {order.sender.msg ? <tr><td>{RL.message}</td><td>{order.sender.msg}</td></tr> : null}
+            {order.tx.memo ? <tr><td>{RL.notes}</td><td>{order.tx.memo}</td></tr> : null}
+            <tr className="r-total"><td>{RL.total}</td><td>{fmt(order.tx.total)} USD</td></tr>
           </tbody>
         </table>
 

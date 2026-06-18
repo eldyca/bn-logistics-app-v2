@@ -9,17 +9,21 @@
 body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased}
 a{color:inherit}
 
+/* app header (chứa topbar + menu) — tạo ngữ cảnh định vị cho menu */
+.appbar{position:sticky;top:0;z-index:40}
 /* top bar */
-.topbar{position:sticky;top:0;z-index:40;background:var(--topbar);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:14px 18px}
+.topbar{position:relative;background:var(--topbar);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:14px 18px}
 .brand{font-size:15px;font-weight:600;letter-spacing:.01em}
 .brand small{display:block;font-size:11px;font-weight:400;color:#9AA0A8;letter-spacing:0}
 .topbar .icons{display:flex;gap:14px;align-items:center}
 .iconbtn{background:none;border:none;color:#C9CCD2;cursor:pointer;padding:6px;display:flex}
 .iconbtn svg{width:24px;height:24px}
 
-/* slide menu */
-.menu{background:var(--menu);max-height:0;overflow:hidden;transition:max-height .28s ease}
-.menu.open{max-height:640px}
+/* slide menu — dropdown canh phải, cùng phía với nút mở menu */
+.menu{position:absolute;right:8px;top:100%;width:min(320px,calc(100vw - 16px));
+  background:var(--menu);border-radius:0 0 12px 12px;box-shadow:0 16px 40px -8px rgba(0,0,0,.5);
+  max-height:0;overflow:hidden;transition:max-height .28s ease;z-index:45}
+.menu.open{max-height:82vh;overflow:auto}
 .menu .grp>button{width:100%;background:none;border:none;color:#fff;font:inherit;font-size:14px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;display:flex;align-items:center;gap:12px;padding:15px 20px;cursor:pointer;border-bottom:1px solid var(--menu-line)}
 .menu .grp>button .chev{margin-left:auto;transition:transform .2s;font-size:12px;color:#7A808A}
 .menu .grp.open>button .chev{transform:rotate(180deg)}
@@ -122,6 +126,20 @@ tr:last-child td{border-bottom:none}
 
 @media(max-width:480px){.grid-3{grid-template-columns:1fr}.stats{grid-template-columns:1fr 1fr}}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* input kèm đơn vị (USD/VND) */
+.inunit{display:flex;align-items:stretch}
+.inunit input{border-top-right-radius:0;border-bottom-right-radius:0}
+.inunit .unit{display:flex;align-items:center;padding:0 14px;border:1px solid var(--line);border-left:none;
+  border-radius:0 9px 9px 0;background:var(--accent-soft);color:var(--accent-dk);font-size:13px;font-weight:700;white-space:nowrap}
+
+/* PC/Desktop: form tạo đơn dàn ngang, bớt phải cuộn dọc */
+@media(min-width:900px){
+  .content:has(.order-form){max-width:1060px}
+  .order-form{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
+  .order-form>.viewtitle,.order-form>.viewsub,.order-form>.btn-row{grid-column:1 / -1}
+  .order-form>.panel{margin-bottom:0}
+}
 
 /* ===== Receipt (A4) ===== */
 .receipt-actions{display:flex;gap:10px;margin-bottom:16px}

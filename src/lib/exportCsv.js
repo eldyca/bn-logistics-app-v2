@@ -28,24 +28,21 @@ export function exportOrders(orders) {
   }
   const head = [
     'Ma', 'Ngay', 'TrangThai',
-    'NG_Ho', 'NG_Ten', 'NG_SDT', 'NG_TP', 'NG_DiaChi',
-    'NN_Ho', 'NN_Ten', 'NN_SDT', 'NN_Tinh', 'NN_HinhThucNhan', 'NN_DiaChi',
+    'NG_Ho', 'NG_Ten', 'NG_SDT', 'NG_TP', 'NG_DiaChi', 'NG_GhiChu',
+    'NN_Ho', 'NN_Ten', 'NN_SDT', 'NN_Tinh', 'NN_HinhThucNhan', 'NN_DiaChi', 'NN_DiaChiNhanTien',
     'NganHang', 'SoTaiKhoan', 'ChuTaiKhoan', 'ChiNhanh',
-    'TienGui', 'TyGia', 'TienNhan', 'PhanTramThue', 'Thue', 'PhanTramPhiGD', 'PhiGD',
+    'TienGui', 'TyGia', 'TienNhan', 'DonViNhan', 'PhanTramThue', 'Thue', 'PhanTramPhiGD', 'PhiGD',
     'ThanhToan', 'TongCong', 'GhiChu',
-    'KHLon_Ho', 'KHLon_Ten', 'KHLon_SDT',
   ]
   const rows = orders.map((x) => {
     const bk = x.bank || {}
-    const mj = x.major || {}
     return [
       x.code, ftime(x.createdAt), STATUS_LABELS[x.status],
-      x.sender.first, x.sender.last, x.sender.phone, x.sender.city, x.sender.addr,
-      x.ben.last, x.ben.first, x.ben.phone, x.ben.province, x.ben.delivery, x.ben.addr,
+      x.sender.first, x.sender.last, x.sender.phone, x.sender.city, x.sender.addr, x.sender.note || '',
+      x.ben.last, x.ben.first, x.ben.phone, x.ben.province, x.ben.delivery, x.ben.addr, x.ben.payoutAddr || '',
       bk.name || '', bk.account || '', bk.holder || '', bk.branch || '',
-      x.tx.send, x.tx.rate, x.tx.receive, x.tx.taxPct, x.tx.tax, x.tx.feePct, x.tx.fee,
+      x.tx.send, x.tx.rate, x.tx.receive, x.tx.cur, x.tx.taxPct, x.tx.tax, x.tx.feePct, x.tx.fee,
       x.tx.pay, x.tx.total, x.tx.memo,
-      mj.last || '', mj.first || '', mj.phone || '',
     ]
   })
   download(

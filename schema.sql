@@ -382,12 +382,15 @@ alter table public.orders add column if not exists tax_percent             numer
 alter table public.orders add column if not exists transaction_fee_percent numeric(9,4) not null default 0;
 alter table public.orders add column if not exists tax_amount              numeric(18,2) not null default 0;
 alter table public.orders add column if not exists transaction_fee_amount  numeric(18,2) not null default 0;
-alter table public.orders add column if not exists major_first_name  text;
-alter table public.orders add column if not exists major_last_name   text;
-alter table public.orders add column if not exists major_middle_name text;
-alter table public.orders add column if not exists major_phone       text;
-alter table public.orders add column if not exists major_address     text;
-alter table public.orders add column if not exists major_note_1      text;
-alter table public.orders add column if not exists major_note_2      text;
-alter table public.orders add column if not exists major_note_3      text;
-alter table public.orders add column if not exists major_note_4      text;
+
+-- =====================================================================
+-- BN Logistics: cột bổ sung cho orders (xem migrations/2026-06-orders-bnlogistics.sql)
+-- =====================================================================
+alter table public.orders add column if not exists sender_note      text;
+alter table public.orders add column if not exists receive_method   text;
+alter table public.orders add column if not exists payout_address   text;
+alter table public.orders add column if not exists receive_currency text not null default 'VND';
+alter table public.orders add column if not exists total_amount     numeric(18,2) not null default 0;
+
+-- Nạp lại schema cache cho PostgREST sau khi thêm cột
+notify pgrst, 'reload schema';

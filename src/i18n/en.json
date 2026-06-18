@@ -102,11 +102,9 @@
     "fillRequired": "Please enter: ",
     "taxPercent": "Tax %",
     "feePercent": "Transaction fee %",
-    "majorCustomer": "Major Customer",
-    "note1": "Note 1",
-    "note2": "Note 2",
-    "note3": "Note 3",
-    "note4": "Note 4"
+    "senderNote": "Note",
+    "receiveCurrency": "Receive currency",
+    "payoutAddress": "Payout address"
   },
   "status": {
     "pending": "Pending",

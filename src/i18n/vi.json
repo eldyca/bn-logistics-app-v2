@@ -102,11 +102,9 @@
     "fillRequired": "Vui lòng nhập: ",
     "taxPercent": "% Thuế",
     "feePercent": "% Phí giao dịch",
-    "majorCustomer": "Khách hàng lớn",
-    "note1": "Ghi chú 1",
-    "note2": "Ghi chú 2",
-    "note3": "Ghi chú 3",
-    "note4": "Ghi chú 4"
+    "senderNote": "Ghi chú",
+    "receiveCurrency": "Đơn vị tiền nhận",
+    "payoutAddress": "Địa chỉ nhận tiền"
   },
   "status": {
     "pending": "Chờ xử lý",
