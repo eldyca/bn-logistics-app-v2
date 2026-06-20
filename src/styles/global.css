@@ -129,6 +129,17 @@ tr:last-child td{border-bottom:none}
 
 /* input kèm đơn vị (USD/VND) */
 .inunit{display:flex;align-items:stretch}
+
+/* dropdown gợi ý người gửi cũ theo số điện thoại */
+.ac-wrap{position:relative}
+.ac-list{position:absolute;left:0;right:0;top:100%;z-index:50;margin:4px 0 0;padding:4px;list-style:none;
+  background:var(--card,#fff);border:1px solid var(--line,#d9d9e3);border-radius:10px;
+  box-shadow:0 12px 30px -8px rgba(0,0,0,.35);max-height:260px;overflow:auto}
+.ac-item{display:flex;flex-direction:column;gap:1px;padding:8px 10px;border-radius:8px;cursor:pointer}
+.ac-item:hover,.ac-item:active{background:var(--accent-soft,#eef2ff)}
+.ac-item .ac-phone{font-weight:700;font-size:13px}
+.ac-item .ac-name{font-size:13px}
+.ac-item .ac-addr{font-size:11px;color:var(--muted,#777)}
 .inunit input{border-top-right-radius:0;border-bottom-right-radius:0}
 .inunit .unit{display:flex;align-items:center;padding:0 14px;border:1px solid var(--line);border-left:none;
   border-radius:0 9px 9px 0;background:var(--accent-soft);color:var(--accent-dk);font-size:13px;font-weight:700;white-space:nowrap}

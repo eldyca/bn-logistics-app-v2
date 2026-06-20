@@ -235,3 +235,34 @@ export async function clearAll() {
   await supabase.from('senders').delete().eq('company_id', company_id)
   await supabase.from('activity_logs').delete().eq('company_id', company_id)
 }
+
+// Gợi ý người gửi cũ theo số điện thoại (phạm vi công ty qua RLS).
+// Trả về tối đa 6 người gửi gần nhất, đã gộp trùng theo số điện thoại.
+export async function searchSendersByPhone(phone) {
+  const q = String(phone || '').trim()
+  if (q.replace(/\D/g, '').length < 3) return []
+  const company_id = await currentCompanyId()
+  if (!company_id) return []
+  const { data, error } = await supabase
+    .from('senders')
+    .select('phone, first_name, last_name, middle_name, country, state, city, zip, address, message, created_at')
+    .eq('company_id', company_id)
+    .ilike('phone', '%' + q + '%')
+    .order('created_at', { ascending: false })
+    .limit(30)
+  if (error || !data) return []
+  const seen = new Set()
+  const out = []
+  for (const r of data) {
+    const key = (r.phone || '').trim()
+    if (!key || seen.has(key)) continue
+    seen.add(key)
+    out.push({
+      phone: r.phone || '', first: r.first_name || '', last: r.last_name || '', middle: r.middle_name || '',
+      country: r.country || '', state: r.state || '', city: r.city || '', zip: r.zip || '',
+      addr: r.address || '', msg: r.message || '',
+    })
+    if (out.length >= 6) break
+  }
+  return out
+}

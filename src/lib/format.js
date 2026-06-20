@@ -13,9 +13,10 @@ export function groupThousands(s) {
   return String(s ?? '').replace(/,/g, '')
 }
 
-// Định dạng tiền tệ kiểu Mỹ: dấu chấm thập phân, 2 chữ số, KHÔNG dấu phẩy ngăn nghìn.
-// 1000 -> "1000.00", 25.5 -> "25.50", 0 -> "0.00"
-export const fmt = (n) => (Number(n) || 0).toFixed(2)
+// Định dạng tiền tệ kiểu Mỹ: dấu phẩy ngăn nghìn + 2 số thập phân (dấu chấm).
+// 0 -> "0.00", 1004 -> "1,004.00", 10000 -> "10,000.00", 1044.16 -> "1,044.16"
+export const fmt = (n) =>
+  (Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
 export const fdate = (t) => new Date(t).toLocaleDateString('vi-VN')
 export const ftime = (t) => new Date(t).toLocaleString('vi-VN')
