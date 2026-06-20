@@ -17,6 +17,7 @@ const EMPTY = {
   ben: { phone: '', phone2: '', last: '', first: '', last2: '', first2: '', country: 'Vietnam', state: '', city: '', zip: '', province: '', delivery: BANK_METHOD, addr: '', payoutAddr: '' },
   bank: { name: '', account: '', holder: '', branch: '' },
   tx: { send: '0.00', rate: '1.00', cur: 'VND', taxPct: '1', feePct: '3', pay: 'Tiền mặt', memo: '' },
+  employee: '',
   status: 'pending',
 }
 
@@ -85,6 +86,7 @@ export default function CreateOrder() {
             taxPct: r.tx.taxPct ?? 1, feePct: r.tx.feePct ?? 3,
             pay: r.tx.pay, memo: r.tx.memo,
           },
+          employee: r.employee || '',
         })
       }
     } else {
@@ -132,6 +134,7 @@ export default function CreateOrder() {
         tax: computed.tax, fee: computed.fee,
         pay: form.tx.pay, total: computed.total, memo: form.tx.memo.trim(),
       },
+      employee: form.employee.trim(),
     }
     setBusy(true)
     try {
@@ -313,6 +316,8 @@ export default function CreateOrder() {
           </div>
           <div className="field full tight"><label>{t('order.memo')}</label>
             <textarea value={form.tx.memo} onChange={(e) => set('tx', 'memo', e.target.value)} /></div>
+          <div className="field full tight"><label>{t('order.employee')}</label>
+            <input value={form.employee} onChange={(e) => setForm((f) => ({ ...f, employee: e.target.value }))} placeholder={t('order.employee')} /></div>
         </div>
       </div>
 

@@ -104,7 +104,8 @@
     "feePercent": "% Phí giao dịch",
     "senderNote": "Ghi chú",
     "receiveCurrency": "Đơn vị tiền nhận",
-    "payoutAddress": "Địa chỉ nhận tiền"
+    "payoutAddress": "Địa chỉ nhận tiền",
+    "employee": "Nhân viên nhận đơn"
   },
   "status": {
     "pending": "Chờ xử lý",

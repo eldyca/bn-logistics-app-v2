@@ -54,6 +54,7 @@ function mapRow(row) {
         pay: tx.payment_method || '', total, memo: row.memo || '',
       }
     })(),
+    employee: row.employee || '',
   }
 }
 
@@ -147,6 +148,7 @@ export async function createOrder(data) {
     tax_percent: data.tx.taxPct, transaction_fee_percent: data.tx.feePct,
     tax_amount: data.tx.tax, transaction_fee_amount: data.tx.fee,
     total_amount: data.tx.total,
+    employee: data.employee || null,
   }).select().single()
   if (e4) throw e4
 
@@ -198,6 +200,7 @@ export async function updateOrder(id, data) {
     tax_percent: data.tx.taxPct, transaction_fee_percent: data.tx.feePct,
     tax_amount: data.tx.tax, transaction_fee_amount: data.tx.fee,
     total_amount: data.tx.total,
+    employee: data.employee || null,
   }).eq('id', id)
 
   await supabase.from('transactions').update({

@@ -104,7 +104,8 @@
     "feePercent": "Transaction fee %",
     "senderNote": "Note",
     "receiveCurrency": "Receive currency",
-    "payoutAddress": "Payout address"
+    "payoutAddress": "Payout address",
+    "employee": "Employee"
   },
   "status": {
     "pending": "Pending",

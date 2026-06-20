@@ -393,4 +393,6 @@ alter table public.orders add column if not exists receive_currency text not nul
 alter table public.orders add column if not exists total_amount     numeric(18,2) not null default 0;
 
 -- Nạp lại schema cache cho PostgREST sau khi thêm cột
+alter table public.orders add column if not exists employee text;
+
 notify pgrst, 'reload schema';
