@@ -1,11 +1,10 @@
 // netlify/functions/create-member.js
-// Admin tạo trực tiếp tài khoản nhân viên bằng Supabase Auth Admin API.
-// Chạy SERVER-SIDE trên Netlify (service_role key KHÔNG bao giờ lộ ra trình duyệt).
+// Admin tạo trực tiếp tài khoản nhân viên bằng Supabase Auth Admin API (server-side).
+// Phiên bản này LOG chi tiết (console.error) và LUÔN trả JSON lỗi rõ ràng (không bao giờ {}).
 //
 // Biến môi trường cần đặt trong Netlify (Site settings -> Environment variables):
 //   SUPABASE_URL                 = https://xxxx.supabase.co
 //   SUPABASE_SERVICE_ROLE_KEY    = <service_role key>   (KHÔNG đặt tiền tố VITE_)
-//   SUPABASE_ANON_KEY            = <anon key>           (tuỳ chọn)
 
 const { createClient } = require('@supabase/supabase-js')
 
@@ -17,64 +16,117 @@ const cors = {
   'Access-Control-Allow-Headers': 'authorization, content-type',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 }
-const resp = (statusCode, obj) => ({
-  statusCode,
-  headers: { ...cors, 'Content-Type': 'application/json' },
-  body: JSON.stringify(obj),
-})
+
+// Luôn trả JSON; nếu obj rỗng vẫn kèm thông tin tối thiểu.
+function resp(statusCode, obj) {
+  const payload = obj && typeof obj === 'object' ? obj : { error: String(obj) }
+  if (statusCode >= 400 && !payload.error) payload.error = 'Lỗi không xác định (HTTP ' + statusCode + ')'
+  return {
+    statusCode,
+    headers: { ...cors, 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  }
+}
+
+// Trích mọi trường có ích từ một lỗi (Error thường hoặc lỗi Supabase/PostgREST).
+function describe(e) {
+  if (!e) return { error: 'Lỗi rỗng (null/undefined)' }
+  if (typeof e === 'string') return { error: e }
+  return {
+    error: e.message || e.error_description || e.msg || e.error || JSON.stringify(e) || String(e),
+    name: e.name,
+    status: e.status ?? e.statusCode ?? e.code,
+    code: e.code,
+    details: e.details,
+    hint: e.hint,
+  }
+}
 
 exports.handler = async (event) => {
   if (event.httpMethod === 'OPTIONS') return { statusCode: 200, headers: cors, body: 'ok' }
   if (event.httpMethod !== 'POST') return resp(405, { error: 'Method not allowed' })
 
   try {
+    // 0) Cấu hình
     if (!SUPABASE_URL || !SERVICE_ROLE) {
-      return resp(500, { error: 'Server chưa cấu hình SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY' })
+      const missing = [!SUPABASE_URL && 'SUPABASE_URL', !SERVICE_ROLE && 'SUPABASE_SERVICE_ROLE_KEY'].filter(Boolean)
+      console.error('[create-member] Thiếu biến môi trường:', missing)
+      return resp(500, { error: 'Server chưa cấu hình: ' + missing.join(', '), stage: 'config', missing })
     }
 
+    // 1) Token người gọi
     const authHeader = event.headers.authorization || event.headers.Authorization || ''
     const token = authHeader.replace(/^Bearer\s+/i, '')
-    if (!token) return resp(401, { error: 'Chưa đăng nhập / Unauthorized' })
+    if (!token) {
+      console.error('[create-member] Thiếu Authorization header')
+      return resp(401, { error: 'Chưa đăng nhập (thiếu token)', stage: 'auth-header' })
+    }
 
-    // Client service_role (toàn quyền) — chỉ tồn tại trên server
+    // 2) Đọc body (Netlify có thể mã hoá base64)
+    let raw = event.body || '{}'
+    if (event.isBase64Encoded) {
+      try { raw = Buffer.from(raw, 'base64').toString('utf8') } catch (e) {
+        console.error('[create-member] Giải mã base64 body lỗi:', e)
+      }
+    }
+    let body
+    try {
+      body = JSON.parse(raw || '{}')
+    } catch (e) {
+      console.error('[create-member] JSON.parse body lỗi. raw =', raw, e)
+      return resp(400, { error: 'Body không phải JSON hợp lệ', stage: 'parse-body', raw })
+    }
+
     const admin = createClient(SUPABASE_URL, SERVICE_ROLE, {
       auth: { autoRefreshToken: false, persistSession: false },
     })
 
-    // 1) Xác định người gọi từ access token
-    const { data: { user }, error: uErr } = await admin.auth.getUser(token)
-    if (uErr || !user) return resp(401, { error: 'Phiên đăng nhập không hợp lệ' })
+    // 3) Xác định người gọi
+    const { data: gu, error: uErr } = await admin.auth.getUser(token)
+    if (uErr || !gu || !gu.user) {
+      console.error('[create-member] getUser lỗi:', describe(uErr))
+      return resp(401, { error: 'Phiên đăng nhập không hợp lệ', stage: 'get-user', ...describe(uErr) })
+    }
+    const caller = gu.user
 
-    // 2) Kiểm tra người gọi là admin đang hoạt động
+    // 4) Kiểm tra admin đang hoạt động
     const { data: me, error: meErr } = await admin
       .from('company_members')
       .select('company_id, role, active')
-      .eq('user_id', user.id)
+      .eq('user_id', caller.id)
       .single()
-    if (meErr || !me || me.role !== 'admin' || me.active !== true) {
-      return resp(403, { error: 'Chỉ admin đang hoạt động mới được tạo tài khoản' })
+    if (meErr) {
+      console.error('[create-member] Truy vấn company_members lỗi:', describe(meErr))
+      return resp(403, { error: 'Không đọc được thông tin thành viên của bạn', stage: 'load-caller', ...describe(meErr) })
+    }
+    if (!me || me.role !== 'admin' || me.active !== true) {
+      console.error('[create-member] Người gọi không phải admin active:', me)
+      return resp(403, { error: 'Chỉ admin đang hoạt động mới được tạo tài khoản', stage: 'check-admin', role: me && me.role, active: me && me.active })
     }
 
-    // 3) Đọc input
-    const body = JSON.parse(event.body || '{}')
+    // 5) Input
     const email = String(body.email || '').trim().toLowerCase()
     const password = String(body.password || '')
     const role = body.role === 'admin' ? 'admin' : 'staff'
     const perms = body.perms || {}
-    if (!email || !/^\S+@\S+\.\S+$/.test(email)) return resp(400, { error: 'Email không hợp lệ' })
-    if (password.length < 6) return resp(400, { error: 'Mật khẩu tạm phải từ 6 ký tự trở lên' })
+    if (!email || !/^\S+@\S+\.\S+$/.test(email)) return resp(400, { error: 'Email không hợp lệ', stage: 'validate', email })
+    if (password.length < 6) return resp(400, { error: 'Mật khẩu tạm phải từ 6 ký tự trở lên', stage: 'validate' })
 
-    // 4) Tạo user trong Auth (xác nhận email luôn để đăng nhập được ngay)
+    // 6) Tạo user trong Auth
     const { data: created, error: cErr } = await admin.auth.admin.createUser({
       email, password, email_confirm: true,
     })
-    if (cErr || !created?.user) return resp(400, { error: (cErr && cErr.message) || 'Không tạo được tài khoản' })
+    if (cErr || !created || !created.user) {
+      console.error('[create-member] createUser lỗi:', describe(cErr))
+      return resp(400, { error: (cErr && cErr.message) || 'Không tạo được tài khoản (email có thể đã tồn tại)', stage: 'create-user', ...describe(cErr) })
+    }
     const newId = created.user.id
 
-    // 5) Đảm bảo public.users tồn tại
-    await admin.from('users').upsert({ id: newId, email }, { onConflict: 'id' })
+    // 7) Đảm bảo public.users
+    const { error: upErr } = await admin.from('users').upsert({ id: newId, email }, { onConflict: 'id' })
+    if (upErr) console.error('[create-member] upsert public.users (bỏ qua được):', describe(upErr))
 
-    // 6) Thêm vào company_members kèm quyền
+    // 8) Thêm vào company_members
     const { error: mErr } = await admin.from('company_members').insert({
       company_id: me.company_id,
       user_id: newId,
@@ -91,12 +143,16 @@ exports.handler = async (event) => {
       can_manage_cargo: perms.can_manage_cargo ?? true,
     })
     if (mErr) {
-      await admin.auth.admin.deleteUser(newId) // rollback
-      return resp(400, { error: mErr.message })
+      console.error('[create-member] insert company_members lỗi -> rollback user:', describe(mErr))
+      const { error: delErr } = await admin.auth.admin.deleteUser(newId)
+      if (delErr) console.error('[create-member] rollback deleteUser lỗi:', describe(delErr))
+      return resp(400, { error: 'Tạo user xong nhưng thêm vào company_members lỗi (đã rollback)', stage: 'insert-member', ...describe(mErr) })
     }
 
-    return resp(200, { ok: true, user_id: newId, email })
+    console.log('[create-member] OK', { email, role, user_id: newId, company_id: me.company_id })
+    return resp(200, { ok: true, user_id: newId, email, role })
   } catch (e) {
-    return resp(500, { error: (e && e.message) || String(e) })
+    console.error('[create-member] Lỗi không bắt được:', e && e.stack ? e.stack : e)
+    return resp(500, { error: 'Lỗi máy chủ', stage: 'uncaught', ...describe(e) })
   }
 }
