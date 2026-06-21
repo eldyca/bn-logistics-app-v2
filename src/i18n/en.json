@@ -35,7 +35,8 @@
     "needBoth": "Please enter email and password.",
     "accountCreated": "Account created. Check your email to confirm (if enabled), then sign in.",
     "loginFailed": "Login failed.",
-    "notConfigured": "Supabase is not configured. Create a .env from .env.example and fill in URL + anon key."
+    "notConfigured": "Supabase is not configured. Create a .env from .env.example and fill in URL + anon key.",
+    "contactAdmin": "Need an account? Please contact your administrator."
   },
   "onboarding": {
     "title": "Welcome",

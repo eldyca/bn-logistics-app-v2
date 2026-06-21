@@ -11,12 +11,29 @@ export async function downloadReceiptPdf({ order } = {}) {
     import('html2canvas'),
   ])
 
-  const canvas = await html2canvas(el, {
-    scale: 2,
-    backgroundColor: '#ffffff',
-    useCORS: true,
-    logging: false,
-  })
+  // Ép bề rộng cố định 8.5in (816px @96dpi) khi chụp để PDF đồng nhất trên mọi
+  // thiết bị (kể cả mobile nơi bản xem trước được thu nhỏ theo màn hình).
+  const prevWidth = el.style.width
+  const prevMaxWidth = el.style.maxWidth
+  const prevPadding = el.style.padding
+  el.style.width = '816px'
+  el.style.maxWidth = '816px'
+  el.style.padding = '28px'
+
+  let canvas
+  try {
+    canvas = await html2canvas(el, {
+      scale: 2,
+      backgroundColor: '#ffffff',
+      useCORS: true,
+      logging: false,
+      windowWidth: 1100,
+    })
+  } finally {
+    el.style.width = prevWidth
+    el.style.maxWidth = prevMaxWidth
+    el.style.padding = prevPadding
+  }
 
   // Letter: 215.9 x 279.4 mm
   const doc = new jsPDF({ unit: 'mm', format: 'letter' })

@@ -35,7 +35,8 @@
     "needBoth": "Vui lòng nhập email và mật khẩu.",
     "accountCreated": "Đã tạo tài khoản. Kiểm tra email để xác nhận (nếu bật), rồi đăng nhập.",
     "loginFailed": "Đăng nhập thất bại.",
-    "notConfigured": "Chưa cấu hình Supabase. Tạo file .env từ .env.example và điền URL + anon key."
+    "notConfigured": "Chưa cấu hình Supabase. Tạo file .env từ .env.example và điền URL + anon key.",
+    "contactAdmin": "Cần tài khoản? Vui lòng liên hệ quản trị viên."
   },
   "onboarding": {
     "title": "Chào mừng",

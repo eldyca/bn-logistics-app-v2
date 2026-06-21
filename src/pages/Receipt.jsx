@@ -13,7 +13,6 @@ const STATUS_BI = {
   cancelled: 'Đã huỷ / Cancelled',
 }
 
-// Nội dung pháp lý bắt buộc (song ngữ) — in nguyên văn ở cuối biên nhận.
 const LEGAL = [
   {
     t: 'RIGHT TO REFUND / QUYỀN ĐƯỢC HOÀN TIỀN',
@@ -37,8 +36,72 @@ const LEGAL = [
   },
 ]
 
-function L({ k, v }) {
+function Line({ k, v }) {
   return <div className="rcpt-line"><span className="lk">{k}:</span> <span className="lv">{v || ''}</span></div>
+}
+
+function Parties({ order, isBank, senderAddr, recvAddr }) {
+  return (
+    <table className="rcpt-grid">
+      <thead><tr><th>SENDER (Người gửi)</th><th>RECIPIENT (Người nhận)</th></tr></thead>
+      <tbody><tr>
+        <td>
+          <Line k="Full Name (Họ tên)" v={`${order.sender.first} ${order.sender.last}`.trim()} />
+          <Line k="Address (Địa chỉ)" v={senderAddr} />
+          <Line k="Phone (Điện thoại)" v={order.sender.phone} />
+          <Line k="Amount to be transmitted (Số tiền gửi)" v={`${fmt(order.tx.send)} USD`} />
+          <Line k="Transmission fee (Phí giao dịch)" v={`${fmt(order.tx.fee)} USD`} />
+          <Line k="Transfer tax (Thuế)" v={`${fmt(order.tx.tax)} USD`} />
+          <Line k="Total (Tổng cộng)" v={`${fmt(order.tx.total)} USD`} />
+          <Line k="Receive amount (Số tiền nhận)" v={`${fmt(order.tx.receive)} ${order.tx.cur}`} />
+          <Line k="Currency to be delivered (Giao tiền)" v={order.tx.cur} />
+        </td>
+        <td>
+          <Line k="Full Name (Họ tên)" v={`${order.ben.first} ${order.ben.last}`.trim()} />
+          <Line k="Phone (Điện thoại)" v={order.ben.phone} />
+          {isBank ? (
+            <>
+              <Line k="Bank (Ngân hàng)" v={order.bank.name} />
+              <Line k="Account No. (Số tài khoản)" v={order.bank.account} />
+              <Line k="Account holder (Chủ tài khoản)" v={order.bank.holder} />
+            </>
+          ) : (
+            <Line k="Payout address (Địa chỉ nhận tiền)" v={recvAddr} />
+          )}
+          <Line k="Method of Payment (Thanh toán)" v={order.tx.pay} />
+          <Line k="Delivery method (Hình thức nhận)" v={order.ben.delivery} />
+          <Line k="Message (Lời nhắn)" v={order.sender.msg} />
+          <Line k="Notes (Ghi chú)" v={order.tx.memo} />
+        </td>
+      </tr></tbody>
+    </table>
+  )
+}
+
+function HeadRow({ co, order }) {
+  return (
+    <div className="rcpt-head3">
+      <div className="rcpt-h-left">
+        <div className="rcpt-coname">{co.name}</div>
+        {co.address ? <div>{co.address}</div> : null}
+        {co.phone ? <div>Tel / ĐT: {co.phone}</div> : null}
+        {co.email ? <div>Email: {co.email}</div> : null}
+      </div>
+      <div className="rcpt-h-center">
+        <div className="rcpt-bigttl">CUSTOMER RECEIPT</div>
+        <div className="rcpt-subttl">Đại lý (Authorized Agent)</div>
+        <div className="rcpt-agent">{co.name}</div>
+      </div>
+      <div className="rcpt-h-right">
+        <table className="rcpt-meta"><tbody>
+          <tr><td>Order No:</td><td>{order.code}</td></tr>
+          <tr><td>Date / Ngày:</td><td>{fdate(order.createdAt)}</td></tr>
+          <tr><td>Status:</td><td>{STATUS_BI[order.status] || order.status}</td></tr>
+          <tr><td>Employee / Nhân viên:</td><td>{order.employee || '—'}</td></tr>
+        </tbody></table>
+      </div>
+    </div>
+  )
 }
 
 export default function Receipt() {
@@ -61,11 +124,11 @@ export default function Receipt() {
     address: company?.address || '',
     phone: company?.phone || '',
     email: company?.email || '',
-    logo: company?.logo_url || '',
   }
   const isBank = (order.ben.delivery || '').includes('Chuyển khoản')
   const senderAddr = [order.sender.addr, order.sender.city, order.sender.state, order.sender.zip].filter(Boolean).join(', ')
   const recvAddr = order.ben.payoutAddr || [order.ben.addr, order.ben.city, order.ben.state || order.ben.province].filter(Boolean).join(', ')
+  const parts = { order, isBank, senderAddr, recvAddr }
 
   return (
     <>
@@ -75,83 +138,38 @@ export default function Receipt() {
         <button className="btn btn-primary" onClick={() => downloadReceiptPdf({ order })}>Tải PDF</button>
       </div>
 
-      <div className="rcpt-page" id="receipt-sheet">
-        {/* Banner tiêu đề */}
-        <div className="rcpt-banner">
-          <div className="rcpt-bigttl">CUSTOMER RECEIPT</div>
-          <div className="rcpt-subttl">Đại lý (Authorized Agent)</div>
-          <div className="rcpt-agent">{co.name}</div>
-        </div>
+      <div className="rcpt-scroll">
+        <div className="rcpt-page" id="receipt-sheet">
+          <HeadRow co={co} order={order} />
+          <Parties {...parts} />
 
-        {/* Header: công ty | thông tin đơn */}
-        <div className="rcpt-top">
-          <div className="rcpt-co">
-            {co.logo ? <img className="rcpt-logo" src={co.logo} alt="logo" /> : <div className="rcpt-logo" />}
-            <div>
-              <div className="rcpt-coname">{co.name}</div>
-              {co.address ? <div>{co.address}</div> : null}
-              {co.phone ? <div>Tel / ĐT: {co.phone}</div> : null}
-              {co.email ? <div>Email: {co.email}</div> : null}
-            </div>
+          <div className="rcpt-signs">
+            <div><div className="rcpt-sigline" />Sender's Signature (Chữ ký người gửi)</div>
+            <div><div className="rcpt-sigline" />Received By (Nhận bởi)</div>
           </div>
-          <table className="rcpt-meta"><tbody>
-            <tr><td>Order No:</td><td>{order.code}</td></tr>
-            <tr><td>Ngày / Date:</td><td>{fdate(order.createdAt)}</td></tr>
-            <tr><td>Trạng thái / Status:</td><td>{STATUS_BI[order.status] || order.status}</td></tr>
-            <tr><td>Employee / Nhân viên:</td><td>{order.employee || '—'}</td></tr>
-          </tbody></table>
-        </div>
 
-        {/* Hai cột Sender / Recipient */}
-        <table className="rcpt-grid">
-          <thead><tr><th>SENDER (Người gửi)</th><th>RECIPIENT (Người nhận)</th></tr></thead>
-          <tbody><tr>
-            <td>
-              <L k="Full Name (Họ tên)" v={`${order.sender.first} ${order.sender.last}`.trim()} />
-              <L k="Address (Địa chỉ)" v={senderAddr} />
-              <L k="Phone (Điện thoại)" v={order.sender.phone} />
-              <L k="Amount to be transmitted (Số tiền gửi)" v={`${fmt(order.tx.send)} USD`} />
-              <L k="Transmission fee (Phí giao dịch)" v={`${fmt(order.tx.fee)} USD`} />
-              <L k="Transfer tax (Thuế)" v={`${fmt(order.tx.tax)} USD`} />
-              <L k="Total (Tổng cộng)" v={`${fmt(order.tx.total)} USD`} />
-              <L k="Receive amount (Số tiền nhận)" v={`${fmt(order.tx.receive)} ${order.tx.cur}`} />
-              <L k="Currency to be delivered (Giao tiền)" v={order.tx.cur} />
-            </td>
-            <td>
-              <L k="Full Name (Họ tên)" v={`${order.ben.first} ${order.ben.last}`.trim()} />
-              <L k="Phone (Điện thoại)" v={order.ben.phone} />
-              {isBank ? (
-                <>
-                  <L k="Bank (Ngân hàng)" v={order.bank.name} />
-                  <L k="Account No. (Số tài khoản)" v={order.bank.account} />
-                  <L k="Account holder (Chủ tài khoản)" v={order.bank.holder} />
-                </>
-              ) : (
-                <L k="Payout address (Địa chỉ nhận tiền)" v={recvAddr} />
-              )}
-              <L k="Method of Payment (Thanh toán)" v={order.tx.pay} />
-              <L k="Delivery method (Hình thức nhận)" v={order.ben.delivery} />
-              <L k="Message (Lời nhắn)" v={order.sender.msg} />
-              <L k="Notes (Ghi chú)" v={order.tx.memo} />
-            </td>
-          </tr></tbody>
-        </table>
+          <div className="rcpt-legal">
+            {LEGAL.map((s, i) => (
+              <div className="rcpt-legal-sec" key={i}>
+                <div className="rcpt-legal-ttl">{s.t}</div>
+                <div className="rcpt-legal-en">{s.en}</div>
+                <div className="rcpt-legal-vi">{s.vi}</div>
+              </div>
+            ))}
+          </div>
 
-        {/* Chữ ký */}
-        <div className="rcpt-signs">
-          <div><div className="rcpt-sigline" />Sender's Signature (Chữ ký người gửi)</div>
-          <div><div className="rcpt-sigline" />Received By (Nhận bởi)</div>
-        </div>
-
-        {/* Nội dung pháp lý */}
-        <div className="rcpt-legal">
-          {LEGAL.map((s, i) => (
-            <div className="rcpt-legal-sec" key={i}>
-              <div className="rcpt-legal-ttl">{s.t}</div>
-              <div className="rcpt-legal-en">{s.en}</div>
-              <div className="rcpt-legal-vi">{s.vi}</div>
-            </div>
-          ))}
+          {/* Bản sao ở cuối trang */}
+          <div className="rcpt-copydiv">— — — — — — — — — — &nbsp; COPY / BẢN SAO &nbsp; — — — — — — — — — —</div>
+          <div className="rcpt-copymeta">
+            <span><b>Order No:</b> {order.code}</span>
+            <span><b>Date / Ngày:</b> {fdate(order.createdAt)}</span>
+            <span><b>Employee / Nhân viên:</b> {order.employee || '—'}</span>
+          </div>
+          <Parties {...parts} />
+          <div className="rcpt-signs">
+            <div><div className="rcpt-sigline" />Sender's Signature (Chữ ký người gửi)</div>
+            <div><div className="rcpt-sigline" />Received By (Nhận bởi)</div>
+          </div>
         </div>
       </div>
     </>

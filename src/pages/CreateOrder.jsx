@@ -3,7 +3,6 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useOrders } from '../context/OrdersContext'
 import { num, fmt } from '../lib/format'
-import { searchSendersByPhone } from '../lib/data'
 import AddressFields from '../components/AddressFields'
 import PayoutAddress from '../components/PayoutAddress'
 import CurrencyInput from '../components/CurrencyInput'
@@ -31,39 +30,86 @@ export default function CreateOrder() {
   const [form, setForm] = useState(EMPTY)
   const [busy, setBusy] = useState(false)
 
-  // Gợi ý người gửi cũ theo số điện thoại
-  const [sug, setSug] = useState([])
-  const [sugOpen, setSugOpen] = useState(false)
+  // Gợi ý người gửi/người nhận cũ theo Tên / Họ / Số điện thoại (lấy từ đơn đã lưu)
+  const [sSug, setSSug] = useState([])
+  const [sOpen, setSOpen] = useState(false)
+  const [rSug, setRSug] = useState([])
+  const [rOpen, setROpen] = useState(false)
   const suppressRef = useRef(false)
+  const sFocusRef = useRef(false)
+  const rFocusRef = useRef(false)
+
+  function matchPeople(side) {
+    const p = side === 'sender' ? form.sender : form.ben
+    const ph = (p.phone || '').trim().toLowerCase()
+    const fn = (p.first || '').trim().toLowerCase()
+    const ln = (p.last || '').trim().toLowerCase()
+    if (ph.replace(/\D/g, '').length < 3 && fn.length < 2 && ln.length < 2) return []
+    const seen = new Set()
+    const out = []
+    for (const o of orders) {
+      const x = side === 'sender' ? o.sender : o.ben
+      if (!x) continue
+      const ok =
+        (ph && (x.phone || '').toLowerCase().includes(ph)) ||
+        (fn && (x.first || '').toLowerCase().includes(fn)) ||
+        (ln && (x.last || '').toLowerCase().includes(ln))
+      if (!ok) continue
+      const key = (x.phone || '') + '|' + (x.first || '') + '|' + (x.last || '')
+      if (seen.has(key)) continue
+      seen.add(key)
+      out.push(side === 'sender' ? { p: x } : { p: x, bank: o.bank })
+      if (out.length >= 6) break
+    }
+    return out
+  }
 
   useEffect(() => {
-    const phone = form.sender.phone
     if (suppressRef.current) { suppressRef.current = false; return }
-    if (!phone || phone.replace(/\D/g, '').length < 3) { setSug([]); setSugOpen(false); return }
-    const h = setTimeout(async () => {
-      try {
-        const rows = await searchSendersByPhone(phone)
-        setSug(rows)
-        setSugOpen(rows.length > 0)
-      } catch { setSug([]); setSugOpen(false) }
+    const h = setTimeout(() => {
+      const rows = matchPeople('sender')
+      setSSug(rows); setSOpen(rows.length > 0 && sFocusRef.current)
     }, 300)
     return () => clearTimeout(h)
-  }, [form.sender.phone])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form.sender.phone, form.sender.first, form.sender.last])
 
-  function pickSender(s) {
+  useEffect(() => {
+    const h = setTimeout(() => {
+      const rows = matchPeople('ben')
+      setRSug(rows); setROpen(rows.length > 0 && rFocusRef.current)
+    }, 300)
+    return () => clearTimeout(h)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form.ben.phone, form.ben.first, form.ben.last])
+
+  function pickSender(x) {
     suppressRef.current = true
-    // Lấy ghi chú/lời nhắn gần nhất của số này từ đơn đã tải (nếu có)
-    const last = orders.find((o) => (o.sender?.phone || '') === s.phone)
     setForm((f) => ({
       ...f,
       sender: {
         ...f.sender,
-        phone: s.phone, first: s.first, last: s.last, middle: s.middle,
-        country: s.country || f.sender.country, state: s.state, city: s.city, zip: s.zip,
-        addr: s.addr, msg: s.msg || (last?.sender?.msg ?? ''), note: last?.sender?.note ?? f.sender.note,
+        phone: x.phone, first: x.first, last: x.last, middle: x.middle,
+        country: x.country || f.sender.country, state: x.state, city: x.city, zip: x.zip,
+        addr: x.addr, msg: x.msg ?? f.sender.msg, note: x.note ?? f.sender.note,
       },
     }))
-    setSug([]); setSugOpen(false)
+    setSSug([]); setSOpen(false)
+  }
+
+  function pickReceiver(x, bank) {
+    setForm((f) => ({
+      ...f,
+      ben: {
+        ...f.ben,
+        phone: x.phone, phone2: x.phone2 || '', first: x.first, last: x.last,
+        country: x.country || f.ben.country, state: x.state, city: x.city, zip: x.zip,
+        province: x.province || x.state || '', delivery: x.delivery || f.ben.delivery,
+        addr: x.addr, payoutAddr: x.payoutAddr || '',
+      },
+      bank: bank ? { ...bank } : f.bank,
+    }))
+    setRSug([]); setROpen(false)
   }
 
   useEffect(() => {
@@ -163,15 +209,15 @@ export default function CreateOrder() {
             <div className="ac-wrap">
               <input type="tel" value={form.sender.phone} autoComplete="off"
                 onChange={(e) => set('sender', 'phone', e.target.value)}
-                onFocus={() => { if (sug.length) setSugOpen(true) }}
-                onBlur={() => setTimeout(() => setSugOpen(false), 150)} />
-              {sugOpen && sug.length > 0 && (
+                onFocus={() => { sFocusRef.current = true; if (sSug.length) setSOpen(true) }}
+                onBlur={() => { sFocusRef.current = false; setTimeout(() => setSOpen(false), 150) }} />
+              {sOpen && sSug.length > 0 && (
                 <ul className="ac-list">
-                  {sug.map((s, i) => (
-                    <li key={i} className="ac-item" onMouseDown={(e) => { e.preventDefault(); pickSender(s) }}>
-                      <span className="ac-phone">{s.phone}</span>
-                      <span className="ac-name">{`${s.first} ${s.last}`.trim()}</span>
-                      {(s.addr || s.city) && <span className="ac-addr">{[s.addr, s.city].filter(Boolean).join(', ')}</span>}
+                  {sSug.map((s, i) => (
+                    <li key={i} className="ac-item" onMouseDown={(e) => { e.preventDefault(); pickSender(s.p) }}>
+                      <span className="ac-phone">{s.p.phone}</span>
+                      <span className="ac-name">{`${s.p.first} ${s.p.last}`.trim()}</span>
+                      {(s.p.addr || s.p.city) && <span className="ac-addr">{[s.p.addr, s.p.city].filter(Boolean).join(', ')}</span>}
                     </li>
                   ))}
                 </ul>
@@ -207,7 +253,24 @@ export default function CreateOrder() {
         <div className="pbody">
           <div className="grid">
             <div className="field"><label>{t('order.phone')} <span className="r">*</span></label>
-              <input type="tel" value={form.ben.phone} onChange={(e) => set('ben', 'phone', e.target.value)} /></div>
+              <div className="ac-wrap">
+                <input type="tel" value={form.ben.phone} autoComplete="off"
+                  onChange={(e) => set('ben', 'phone', e.target.value)}
+                  onFocus={() => { rFocusRef.current = true; if (rSug.length) setROpen(true) }}
+                  onBlur={() => { rFocusRef.current = false; setTimeout(() => setROpen(false), 150) }} />
+                {rOpen && rSug.length > 0 && (
+                  <ul className="ac-list">
+                    {rSug.map((s, i) => (
+                      <li key={i} className="ac-item" onMouseDown={(e) => { e.preventDefault(); pickReceiver(s.p, s.bank) }}>
+                        <span className="ac-phone">{s.p.phone}</span>
+                        <span className="ac-name">{`${s.p.first} ${s.p.last}`.trim()}</span>
+                        {(s.p.addr || s.p.city) && <span className="ac-addr">{[s.p.addr, s.p.city].filter(Boolean).join(', ')}</span>}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </div>
             <div className="field"><label>{t('order.otherPhone')}</label>
               <input type="tel" value={form.ben.phone2} onChange={(e) => set('ben', 'phone2', e.target.value)} /></div>
           </div>

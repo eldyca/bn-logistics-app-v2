@@ -5,10 +5,9 @@ import { useAuth } from '../context/AuthContext'
 import { isSupabaseConfigured } from '../lib/supabase'
 
 export default function Login() {
-  const { signIn, signUp } = useAuth()
+  const { signIn } = useAuth()
   const navigate = useNavigate()
   const { t } = useTranslation()
-  const [mode, setMode] = useState('login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [msg, setMsg] = useState(null)
@@ -22,16 +21,9 @@ export default function Login() {
     }
     setBusy(true)
     try {
-      if (mode === 'login') {
-        const { error } = await signIn(email, password)
-        if (error) throw error
-        navigate('/')
-      } else {
-        const { error } = await signUp(email, password)
-        if (error) throw error
-        setMsg({ type: 'warn', text: t('auth.accountCreated') })
-        setMode('login')
-      }
+      const { error } = await signIn(email, password)
+      if (error) throw error
+      navigate('/')
     } catch (e) {
       setMsg({ type: 'err', text: e.message || t('auth.loginFailed') })
     } finally {
@@ -43,7 +35,7 @@ export default function Login() {
     <div className="login-wrap">
       <div className="login-card">
         <div className="mark"><span /></div>
-        <h1>{mode === 'login' ? t('auth.login') : t('auth.createAccount')}</h1>
+        <h1>{t('auth.login')}</h1>
         <p className="sub">{t('app.title')}</p>
 
         {!isSupabaseConfigured ? <div className="banner warn">{t('auth.notConfigured')}</div> : null}
@@ -57,21 +49,18 @@ export default function Login() {
           <label>{t('auth.password')}</label>
           <input
             type="password" value={password} onChange={(e) => setPassword(e.target.value)}
-            placeholder="••••••••" autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+            placeholder="••••••••" autoComplete="current-password"
             onKeyDown={(e) => e.key === 'Enter' && submit()}
           />
         </div>
 
         <button className="btn btn-primary" onClick={submit} disabled={busy}>
-          {busy ? t('auth.processing') : mode === 'login' ? t('auth.signIn') : t('auth.signUp')}
+          {busy ? t('auth.processing') : t('auth.signIn')}
         </button>
 
-        <div className="switch">
-          {mode === 'login' ? t('auth.noAccount') : t('auth.haveAccount')}{' '}
-          <button onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setMsg(null) }}>
-            {mode === 'login' ? t('auth.register') : t('auth.login')}
-          </button>
-        </div>
+        <p className="switch" style={{ color: 'var(--muted,#777)', fontSize: 13 }}>
+          {t('auth.contactAdmin')}
+        </p>
       </div>
     </div>
   )
