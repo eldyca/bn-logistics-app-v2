@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { useOrders } from '../context/OrdersContext'
 import {
   listMembers, adminCreateMember, removeMember,
-  setMemberRole, setMemberPermissions, setMemberActive,
+  setMemberRole, setMemberPermissions, setMemberActive, adminResetMemberPassword,
 } from '../lib/supabase'
 import { exportOrders } from '../lib/exportCsv'
 
@@ -45,6 +45,19 @@ export default function Company() {
   async function run(fn) {
     setMsg(null)
     try { await fn(); await load() } catch (e) { setMsg(e.message || String(e)) }
+  }
+
+  async function doResetPassword(m) {
+    const pw = window.prompt('Đặt mật khẩu tạm mới cho ' + (m.email || m.user_id) + ' (≥ 6 ký tự):')
+    if (pw == null) return
+    if (pw.length < 6) { setMsg('Mật khẩu phải từ 6 ký tự'); return }
+    setMsg(null)
+    try {
+      await adminResetMemberPassword(m.user_id, pw)
+      setMsg('Đã đặt lại mật khẩu cho ' + (m.email || m.user_id) + '. Hãy đưa mật khẩu mới cho nhân viên.')
+    } catch (e) {
+      setMsg(e.message || String(e))
+    }
   }
 
   async function doCreate() {
@@ -146,6 +159,7 @@ export default function Company() {
                       <button className="mini" onClick={() => run(() => setMemberActive(m.user_id, !m.active))}>
                         {m.active ? t('company.lock') : t('company.unlock')}
                       </button>
+                      <button className="mini" onClick={() => doResetPassword(m)}>Đặt lại MK</button>
                       <button className="mini del" onClick={() => { if (confirm(t('company.remove') + '?')) run(() => removeMember(m.user_id)) }}>
                         {t('company.remove')}
                       </button>

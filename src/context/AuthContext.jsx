@@ -59,6 +59,7 @@ export function AuthProvider({ children }) {
         membership,
         company: membership?.company || null,
         role: membership?.role || null,
+        isSuperAdmin: membership?.isSuperAdmin || false,
         memberLoading,
         signIn,
         signUp,

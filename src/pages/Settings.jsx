@@ -1,13 +1,14 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../context/AuthContext'
-import { updateCompany } from '../lib/supabase'
+import { updateCompany, updateCompanyAds, changePassword } from '../lib/supabase'
 import { setLanguage } from '../i18n'
 
 export default function Settings() {
   const { t, i18n } = useTranslation()
-  const { company, role, user, refreshMembership } = useAuth()
-  const isAdmin = role === 'admin'
+  const { company, role, user, isSuperAdmin, refreshMembership } = useAuth()
+  const canEdit = isSuperAdmin
+  const isAdmin = role === 'admin' || isSuperAdmin
 
   const [form, setForm] = useState({
     name: company?.name || '',
@@ -21,6 +22,8 @@ export default function Settings() {
   })
   const [busy, setBusy] = useState(false)
   const [msg, setMsg] = useState(null)
+  const [newPass, setNewPass] = useState('')
+  const [newPass2, setNewPass2] = useState('')
 
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }))
 
@@ -69,11 +72,39 @@ export default function Settings() {
         currency: form.currency,
         receipt_footer: form.receipt_footer,
         logo_url: form.logo_url,
-        ad_left: form.ad_left,
-        ad_right: form.ad_right,
       })
       await refreshMembership()
       setMsg(t('settings.saved'))
+    } catch (e) {
+      setMsg(e.message || String(e))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function saveAds() {
+    setMsg(null)
+    setBusy(true)
+    try {
+      await updateCompanyAds(form.ad_left, form.ad_right)
+      await refreshMembership()
+      setMsg('Đã lưu quảng cáo')
+    } catch (e) {
+      setMsg(e.message || String(e))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function doChangePassword() {
+    setMsg(null)
+    if (newPass.length < 6) { setMsg('Mật khẩu mới phải từ 6 ký tự'); return }
+    if (newPass !== newPass2) { setMsg('Mật khẩu nhập lại không khớp'); return }
+    setBusy(true)
+    try {
+      await changePassword(newPass)
+      setNewPass(''); setNewPass2('')
+      setMsg('Đã đổi mật khẩu thành công')
     } catch (e) {
       setMsg(e.message || String(e))
     } finally {
@@ -113,18 +144,18 @@ export default function Settings() {
       <div className="panel">
         <div className="phead">{t('settings.companyInfo')}</div>
         <div className="pbody">
-          {!isAdmin ? <div className="banner warn">{t('settings.adminOnly')}</div> : null}
+          {!canEdit ? <div className="banner warn">Chỉ super_admin mới được sửa thông tin công ty. Bạn có thể xem nhưng không sửa.</div> : null}
           {msg ? <div className="banner warn">{msg}</div> : null}
 
           <div className="field"><label>{t('settings.companyName')}</label>
-            <input value={form.name} disabled={!isAdmin} onChange={(e) => set('name', e.target.value)} /></div>
+            <input value={form.name} disabled={!canEdit} onChange={(e) => set('name', e.target.value)} /></div>
           <div className="field"><label>{t('settings.address')}</label>
-            <input value={form.address} disabled={!isAdmin} onChange={(e) => set('address', e.target.value)} /></div>
+            <input value={form.address} disabled={!canEdit} onChange={(e) => set('address', e.target.value)} /></div>
           <div className="grid">
             <div className="field tight"><label>{t('settings.phone')}</label>
-              <input value={form.phone} disabled={!isAdmin} onChange={(e) => set('phone', e.target.value)} /></div>
+              <input value={form.phone} disabled={!canEdit} onChange={(e) => set('phone', e.target.value)} /></div>
             <div className="field tight"><label>{t('settings.currency')}</label>
-              <select value={form.currency} disabled={!isAdmin} onChange={(e) => set('currency', e.target.value)}>
+              <select value={form.currency} disabled={!canEdit} onChange={(e) => set('currency', e.target.value)}>
                 <option>USD</option><option>VND</option><option>EUR</option>
               </select></div>
           </div>
@@ -134,12 +165,12 @@ export default function Settings() {
             {form.logo_url ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
                 <img src={form.logo_url} alt="logo" style={{ height: 48, borderRadius: 8 }} />
-                {isAdmin ? (
+                {canEdit ? (
                   <button className="export" onClick={() => set('logo_url', '')}>{t('settings.removeLogo')}</button>
                 ) : null}
               </div>
             ) : null}
-            {isAdmin ? <input type="file" accept="image/*" onChange={onLogo} /> : null}
+            {canEdit ? <input type="file" accept="image/*" onChange={onLogo} /> : null}
           </div>
         </div>
       </div>
@@ -149,7 +180,7 @@ export default function Settings() {
         <div className="pbody">
           <div className="field full tight">
             <label>{t('settings.receiptFooter')}</label>
-            <input value={form.receipt_footer} disabled={!isAdmin} onChange={(e) => set('receipt_footer', e.target.value)} />
+            <input value={form.receipt_footer} disabled={!canEdit} onChange={(e) => set('receipt_footer', e.target.value)} />
           </div>
         </div>
       </div>
@@ -161,6 +192,7 @@ export default function Settings() {
             2 banner hiển thị ở lề trái/phải của Trang chủ (chỉ trên màn hình rộng ≥ 1200px;
             không hiển thị khi in). Thiết kế ảnh dọc, <strong>kích thước khuyến nghị 160 × 600 px</strong>
             {' '}(tỉ lệ 4:15), định dạng PNG/JPG. Ảnh sẽ tự thu nhỏ vừa cột rộng 160px.
+            {!isAdmin ? <><br />Chỉ admin công ty mới sửa được quảng cáo.</> : null}
           </p>
 
           <div className="field full" style={{ marginBottom: 16 }}>
@@ -184,6 +216,28 @@ export default function Settings() {
             ) : null}
             {isAdmin ? <input type="file" accept="image/*" onChange={(e) => onAd('ad_right', e)} /> : null}
           </div>
+
+          {isAdmin ? (
+            <button className="searchbtn" style={{ marginTop: 14 }} onClick={saveAds} disabled={busy}>
+              {busy ? '…' : 'Lưu quảng cáo'}
+            </button>
+          ) : null}
+        </div>
+      </div>
+
+      <div className="panel">
+        <div className="phead">Đổi mật khẩu</div>
+        <div className="pbody">
+          <p style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 10 }}>
+            Đổi mật khẩu đăng nhập của chính bạn (nên đổi sau lần đăng nhập đầu).
+          </p>
+          <div className="field tight"><label>Mật khẩu mới (≥ 6 ký tự)</label>
+            <input type="password" value={newPass} onChange={(e) => setNewPass(e.target.value)} placeholder="••••••••" autoComplete="new-password" /></div>
+          <div className="field tight"><label>Nhập lại mật khẩu mới</label>
+            <input type="password" value={newPass2} onChange={(e) => setNewPass2(e.target.value)} placeholder="••••••••" autoComplete="new-password" /></div>
+          <button className="searchbtn" style={{ marginTop: 12 }} onClick={doChangePassword} disabled={busy}>
+            {busy ? '…' : 'Đổi mật khẩu'}
+          </button>
         </div>
       </div>
 
@@ -197,7 +251,7 @@ export default function Settings() {
         </div>
       </div>
 
-      {isAdmin ? (
+      {canEdit ? (
         <button className="btn btn-primary" onClick={save} disabled={busy} style={{ width: '100%' }}>
           {busy ? t('auth.processing') : t('settings.save')}
         </button>

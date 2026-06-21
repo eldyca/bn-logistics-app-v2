@@ -46,15 +46,65 @@ export async function currentCompanyId() {
 export async function getMembership() {
   const user = await currentUser()
   if (!user) return null
+
   const { data, error } = await supabase
     .from('company_members')
     .select('company_id, role, company:companies(id, name, address, phone, logo_url, currency, receipt_footer)')
     .eq('user_id', user.id)
     .maybeSingle()
   if (error || !data) return null
+
+  // Quảng cáo lưu ở bảng riêng company_ads (admin công ty quản, không cần super_admin)
+  const company = data.company || null
+  if (company) {
+    const { data: ads } = await supabase
+      .from('company_ads').select('ad_left, ad_right').eq('company_id', data.company_id).maybeSingle()
+    company.ad_left = ads?.ad_left || ''
+    company.ad_right = ads?.ad_right || ''
+  }
+
+  // Cờ super_admin
+  let isSuperAdmin = false
+  const { data: prof } = await supabase
+    .from('user_profiles').select('is_super_admin').eq('user_id', user.id).maybeSingle()
+  if (prof && prof.is_super_admin) isSuperAdmin = true
+
   clearCompanyCache()
   _companyId = data.company_id
-  return { company_id: data.company_id, role: data.role, company: data.company || null }
+  return { company_id: data.company_id, role: data.role, company, isSuperAdmin }
+}
+
+// Đổi mật khẩu của chính người dùng đang đăng nhập
+export async function changePassword(newPassword) {
+  const { error } = await supabase.auth.updateUser({ password: newPassword })
+  if (error) throw error
+}
+
+// Admin đặt lại mật khẩu cho nhân viên (qua Netlify Function service_role)
+export async function adminResetMemberPassword(userId, password) {
+  const { data: { session } } = await supabase.auth.getSession()
+  const token = session?.access_token
+  if (!token) throw new Error('Chưa đăng nhập')
+  const res = await fetch('/.netlify/functions/reset-member-password', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ user_id: userId, password }),
+  })
+  let out = {}
+  try { out = await res.json() } catch { /* ignore */ }
+  if (!res.ok || out.error) throw new Error(out.error || ('Lỗi máy chủ (HTTP ' + res.status + ')'))
+  return out
+}
+
+// Lưu quảng cáo (admin công ty) vào bảng riêng company_ads
+export async function updateCompanyAds(ad_left, ad_right) {
+  const company_id = await currentCompanyId()
+  if (!company_id) throw new Error('Chưa có công ty')
+  const { error } = await supabase
+    .from('company_ads')
+    .upsert({ company_id, ad_left: ad_left || null, ad_right: ad_right || null, updated_at: new Date().toISOString() },
+      { onConflict: 'company_id' })
+  if (error) throw error
 }
 
 export async function createCompany(name) {
