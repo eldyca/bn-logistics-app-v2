@@ -16,7 +16,6 @@ function mapRow(row) {
     status: row.status,
     createdAt: new Date(row.created_at).getTime(),
     updatedAt: new Date(row.updated_at).getTime(),
-    createdByEmail: row.creator?.email || '',
     sender: {
       phone: s.phone || '', first: s.first_name || '', last: s.last_name || '',
       middle: s.middle_name || '', country: s.country || '', state: s.state || '',
@@ -59,7 +58,7 @@ function mapRow(row) {
 }
 
 const ORDER_SELECT =
-  '*, sender:senders(*), receiver:receivers(*), beneficiary:beneficiaries(*), transactions(*), creator:users(email)'
+  '*, sender:senders(*), receiver:receivers(*), beneficiary:beneficiaries(*), transactions(*)'
 
 export async function fetchOrders() {
   const { data, error } = await supabase

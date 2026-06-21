@@ -248,3 +248,13 @@ tr:last-child td{border-bottom:none}
   .rcpt-page { width:auto; max-width:none; padding:0; }
   @page { size:letter; margin:0.3in; }
 }
+
+/* Quản lý thành viên + phân quyền */
+.member-row{padding:10px 0;border-bottom:1px solid var(--line,#e5e5ea)}
+.member-head{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.member-actions{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.member-actions select{height:30px;padding:0 6px;font-size:12px}
+.perm-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:4px 14px}
+.perm-chk{display:flex;align-items:center;gap:6px;font-size:12px}
+.perm-chk input{width:auto;height:auto}
+@media(min-width:700px){.perm-grid{grid-template-columns:repeat(4,1fr)}}

@@ -249,7 +249,13 @@
     "exportAll": "Export all (Excel)",
     "clearAll": "Clear all data",
     "confirmClear": "Delete ALL orders and logs for this company? This cannot be undone.",
-    "cleared": "All data deleted."
+    "cleared": "All data deleted.",
+    "permissions": "Permissions",
+    "active": "Active",
+    "lock": "Lock",
+    "unlock": "Unlock",
+    "createMember": "Create member",
+    "locked": "Locked"
   },
   "common": {
     "loading": "Loading…",
@@ -260,5 +266,15 @@
     "selectCity": "Select city/district",
     "typeToSearch": "Type to search address…",
     "manualEntry": "Manual entry"
+  },
+  "perm": {
+    "can_create": "Create orders",
+    "can_edit": "Edit orders",
+    "can_delete": "Delete orders",
+    "can_change_status": "Change status",
+    "can_view_receipt": "View receipt",
+    "can_manage_customers": "Manage customers",
+    "can_manage_members": "Manage members",
+    "can_manage_cargo": "Manage cargo"
   }
 }

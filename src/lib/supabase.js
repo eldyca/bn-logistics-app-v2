@@ -88,18 +88,51 @@ export async function inviteStaff(email, role = 'staff') {
   if (error) throw error
 }
 
+// Admin mời/tạo thành viên kèm quyền (perms là object {can_*: bool})
+export async function adminInviteMember(email, role = 'staff', perms = {}) {
+  const { error } = await supabase.rpc('admin_invite_member', {
+    p_email: email, p_role: role, p_perms: perms,
+  })
+  if (error) throw error
+}
+
+// Danh sách thành viên: KHÔNG embed users(*). Dùng RPC security definer trả về email.
 export async function listMembers() {
-  const { data, error } = await supabase
-    .from('company_members')
-    .select('id, role, user_id, user:users(email)')
-    .order('created_at', { ascending: true })
+  const { data, error } = await supabase.rpc('list_company_members')
   if (error) throw error
   return (data || []).map((m) => ({
     id: m.id,
-    role: m.role,
     user_id: m.user_id,
-    email: m.user?.email || m.user_id,
+    email: m.email || m.user_id,
+    role: m.role,
+    active: m.active,
+    perms: {
+      can_create: m.can_create, can_edit: m.can_edit, can_delete: m.can_delete,
+      can_change_status: m.can_change_status, can_view_receipt: m.can_view_receipt,
+      can_manage_customers: m.can_manage_customers, can_manage_members: m.can_manage_members,
+      can_manage_cargo: m.can_manage_cargo,
+    },
   }))
+}
+
+export async function setMemberRole(userId, role) {
+  const { error } = await supabase.rpc('set_member_role', { p_user: userId, p_role: role })
+  if (error) throw error
+}
+
+export async function setMemberPermissions(userId, perms) {
+  const { error } = await supabase.rpc('set_member_permissions', { p_user: userId, p_perms: perms })
+  if (error) throw error
+}
+
+export async function setMemberActive(userId, active) {
+  const { error } = await supabase.rpc('set_member_active', { p_user: userId, p_active: active })
+  if (error) throw error
+}
+
+export async function removeMember(userId) {
+  const { error } = await supabase.rpc('remove_member', { p_user: userId })
+  if (error) throw error
 }
 
 export async function listInvitations() {
@@ -109,11 +142,6 @@ export async function listInvitations() {
     .order('created_at', { ascending: false })
   if (error) throw error
   return data || []
-}
-
-export async function removeMember(memberId) {
-  const { error } = await supabase.from('company_members').delete().eq('id', memberId)
-  if (error) throw error
 }
 
 export async function updateCompany(fields) {

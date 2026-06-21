@@ -249,7 +249,13 @@
     "exportAll": "Xuất tất cả (Excel)",
     "clearAll": "Xoá toàn bộ dữ liệu",
     "confirmClear": "Xoá TOÀN BỘ đơn và nhật ký của công ty này? Không thể hoàn tác.",
-    "cleared": "Đã xoá toàn bộ dữ liệu."
+    "cleared": "Đã xoá toàn bộ dữ liệu.",
+    "permissions": "Phân quyền",
+    "active": "Hoạt động",
+    "lock": "Khóa",
+    "unlock": "Mở khóa",
+    "createMember": "Tạo nhân viên",
+    "locked": "Đã khóa"
   },
   "common": {
     "loading": "Đang tải…",
@@ -260,5 +266,15 @@
     "selectCity": "Chọn thành phố/quận huyện",
     "typeToSearch": "Gõ để tìm địa chỉ…",
     "manualEntry": "Nhập tay"
+  },
+  "perm": {
+    "can_create": "Tạo đơn",
+    "can_edit": "Sửa đơn",
+    "can_delete": "Xóa đơn",
+    "can_change_status": "Đổi trạng thái",
+    "can_view_receipt": "Xem biên nhận",
+    "can_manage_customers": "Quản lý khách hàng",
+    "can_manage_members": "Quản lý nhân viên",
+    "can_manage_cargo": "Quản lý chuyển hàng"
   }
 }
