@@ -1,6 +1,50 @@
 import { supabase, currentUser, currentCompanyId } from './supabase'
 import i18n from '../i18n'
 
+// Nếu DB thiếu một cột (PostgREST PGRST204: "Could not find the 'X' column ...")
+// thì tự bỏ cột đó và thử lại — để app vẫn lưu được dù migration chưa chạy đủ.
+function missingColumn(error) {
+  if (!error) return null
+  const m = /Could not find the '([^']+)' column/.exec(error.message || '')
+  return m ? m[1] : null
+}
+
+async function insertReturningSingle(table, row) {
+  const payload = { ...row }
+  for (let i = 0; i < 15; i++) {
+    const { data, error } = await supabase.from(table).insert(payload).select().single()
+    if (!error) return { data, error: null }
+    const col = error.code === 'PGRST204' ? missingColumn(error) : null
+    if (col && col in payload) { delete payload[col]; continue }
+    return { data: null, error }
+  }
+  return { data: null, error: new Error('Thiếu quá nhiều cột ở bảng ' + table) }
+}
+
+async function insertRow(table, row) {
+  const payload = { ...row }
+  for (let i = 0; i < 15; i++) {
+    const { error } = await supabase.from(table).insert(payload)
+    if (!error) return { error: null }
+    const col = error.code === 'PGRST204' ? missingColumn(error) : null
+    if (col && col in payload) { delete payload[col]; continue }
+    return { error }
+  }
+  return { error: new Error('Thiếu quá nhiều cột ở bảng ' + table) }
+}
+
+async function updateRow(table, row, matchCol, matchVal) {
+  const payload = { ...row }
+  for (let i = 0; i < 15; i++) {
+    const { error } = await supabase.from(table).update(payload).eq(matchCol, matchVal)
+    if (!error) return { error: null }
+    const col = error.code === 'PGRST204' ? missingColumn(error) : null
+    if (col && col in payload) { delete payload[col]; continue }
+    return { error }
+  }
+  return { error: new Error('Thiếu quá nhiều cột ở bảng ' + table) }
+}
+
 function statusLabel(k) {
   return i18n.t('status.' + k)
 }
@@ -137,7 +181,7 @@ export async function createOrder(data) {
   if (e3) throw e3
 
   const code = await nextCode(company_id)
-  const { data: order, error: e4 } = await supabase.from('orders').insert({
+  const { data: order, error: e4 } = await insertReturningSingle('orders', {
     ...base, code, status: data.status || 'pending',
     sender_id: sender.id, receiver_id: receiver.id, beneficiary_id: beneficiary.id, memo: data.tx.memo,
     sender_note: data.sender.note || null,
@@ -148,10 +192,10 @@ export async function createOrder(data) {
     tax_amount: data.tx.tax, transaction_fee_amount: data.tx.fee,
     total_amount: data.tx.total,
     employee: data.employee || null,
-  }).select().single()
+  })
   if (e4) throw e4
 
-  const { error: e5 } = await supabase.from('transactions').insert({
+  const { error: e5 } = await insertRow('transactions', {
     ...base, order_id: order.id,
     send_amount: data.tx.send, rate: data.tx.rate, receive_amount: data.tx.receive,
     charge: 0, commission: 0, fee: data.tx.fee, tax: data.tx.tax,
@@ -190,7 +234,7 @@ export async function updateOrder(id, data) {
     }).eq('id', order.beneficiary_id)
   }
 
-  await supabase.from('orders').update({
+  await updateRow('orders', {
     status: data.status, memo: data.tx.memo, updated_at: new Date().toISOString(),
     sender_note: data.sender.note || null,
     receive_method: data.ben.delivery || null,
@@ -200,7 +244,7 @@ export async function updateOrder(id, data) {
     tax_amount: data.tx.tax, transaction_fee_amount: data.tx.fee,
     total_amount: data.tx.total,
     employee: data.employee || null,
-  }).eq('id', id)
+  }, 'id', id)
 
   await supabase.from('transactions').update({
     send_amount: data.tx.send, rate: data.tx.rate, receive_amount: data.tx.receive,

@@ -155,11 +155,11 @@ export default function Settings() {
       </div>
 
       <div className="panel">
-        <div className="phead">Quảng cáo cạnh biên nhận</div>
+        <div className="phead">Quảng cáo 2 bên Trang chủ</div>
         <div className="pbody">
           <p style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 12 }}>
-            2 banner hiển thị ở khoảng trống hai bên biên nhận (chỉ trên màn hình rộng;
-            không in vào PDF). Thiết kế ảnh dọc, <strong>kích thước khuyến nghị 160 × 600 px</strong>
+            2 banner hiển thị ở lề trái/phải của Trang chủ (chỉ trên màn hình rộng ≥ 1200px;
+            không hiển thị khi in). Thiết kế ảnh dọc, <strong>kích thước khuyến nghị 160 × 600 px</strong>
             {' '}(tỉ lệ 4:15), định dạng PNG/JPG. Ảnh sẽ tự thu nhỏ vừa cột rộng 160px.
           </p>
 

@@ -141,15 +141,8 @@ export default function Receipt() {
         <button className="btn btn-primary" onClick={() => downloadReceiptPdf({ order })}>Tải PDF</button>
       </div>
 
-      <div className="receipt-stage">
-        {co.adLeft ? (
-          <div className="rcpt-ad rcpt-ad-left no-print">
-            <img src={co.adLeft} alt="Quảng cáo" />
-          </div>
-        ) : null}
-
-        <div className="rcpt-scroll">
-          <div className="rcpt-page" id="receipt-sheet">
+      <div className="rcpt-scroll">
+        <div className="rcpt-page" id="receipt-sheet">
           <HeadRow co={co} order={order} />
           <Parties {...parts} />
 
@@ -181,13 +174,6 @@ export default function Receipt() {
             <div><div className="rcpt-sigline" />Received By (Nhận bởi)</div>
           </div>
         </div>
-        </div>
-
-        {co.adRight ? (
-          <div className="rcpt-ad rcpt-ad-right no-print">
-            <img src={co.adRight} alt="Quảng cáo" />
-          </div>
-        ) : null}
       </div>
     </>
   )
