@@ -161,12 +161,12 @@ exports.handler = async (event) => {
     if (upErr) console.error('[create-member] upsert public.users (bỏ qua được):', describe(upErr))
 
     // 8) Thêm vào company_members
-    const { error: mErr } = await admin.from('company_members').insert({
+    // Không gửi 'email' để không phụ thuộc cột email (email đã có trong auth.users).
+    const memberRow = {
       company_id: me.company_id,
       user_id: newId,
       role,
       active: true,
-      email,
       can_create: perms.can_create ?? true,
       can_edit: perms.can_edit ?? true,
       can_delete: perms.can_delete ?? false,
@@ -175,7 +175,8 @@ exports.handler = async (event) => {
       can_manage_customers: perms.can_manage_customers ?? true,
       can_manage_members: perms.can_manage_members ?? false,
       can_manage_cargo: perms.can_manage_cargo ?? true,
-    })
+    }
+    const { error: mErr } = await admin.from('company_members').insert(memberRow)
     if (mErr) {
       console.error('[create-member] insert company_members lỗi -> rollback user:', describe(mErr))
       const { error: delErr } = await admin.auth.admin.deleteUser(newId)
