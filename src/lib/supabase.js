@@ -91,22 +91,21 @@ export async function adminInviteMember(email, role = 'staff', perms = {}) {
   if (error) throw error
 }
 
-// Admin tạo TRỰC TIẾP tài khoản nhân viên (email + mật khẩu tạm) qua Edge Function
-// dùng service_role. Không gửi email mời.
+// Admin tạo TRỰC TIẾP tài khoản nhân viên (email + mật khẩu tạm) qua Netlify
+// Function (server-side dùng service_role). Không gửi email mời.
 export async function adminCreateMember(email, password, role = 'staff', perms = {}) {
-  const { data, error } = await supabase.functions.invoke('create-member', {
-    body: { email, password, role, perms },
+  const { data: { session } } = await supabase.auth.getSession()
+  const token = session?.access_token
+  if (!token) throw new Error('Chưa đăng nhập')
+  const res = await fetch('/.netlify/functions/create-member', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ email, password, role, perms }),
   })
-  if (error) {
-    let msg = error.message || 'Tạo tài khoản thất bại'
-    try {
-      const ctx = await error.context?.json?.()
-      if (ctx?.error) msg = ctx.error
-    } catch { /* ignore */ }
-    throw new Error(msg)
-  }
-  if (data?.error) throw new Error(data.error)
-  return data
+  let out = {}
+  try { out = await res.json() } catch { /* ignore */ }
+  if (!res.ok || out.error) throw new Error(out.error || ('Lỗi máy chủ (HTTP ' + res.status + ')'))
+  return out
 }
 
 // Danh sách thành viên: company_members là TABLE -> select trực tiếp, KHÔNG dùng RPC.
