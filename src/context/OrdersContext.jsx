@@ -51,8 +51,9 @@ export function OrdersProvider({ children }) {
 
   const addOrder = useCallback(
     async (data) => {
-      await apiCreate(data)
+      const newId = await apiCreate(data)
       await refresh()
+      return newId
     },
     [refresh]
   )

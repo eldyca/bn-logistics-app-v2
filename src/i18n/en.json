@@ -204,7 +204,9 @@
     "print": "Print Receipt",
     "exportPdf": "Export PDF",
     "back": "Back",
-    "view": "Receipt"
+    "view": "Receipt",
+    "finish": "Finish",
+    "newOrder": "New order"
   },
   "settings": {
     "title": "Settings",

@@ -204,7 +204,9 @@
     "print": "In biên nhận",
     "exportPdf": "Xuất PDF",
     "back": "Quay lại",
-    "view": "Biên nhận"
+    "view": "Biên nhận",
+    "finish": "Kết thúc",
+    "newOrder": "Tạo đơn mới"
   },
   "settings": {
     "title": "Cài đặt",

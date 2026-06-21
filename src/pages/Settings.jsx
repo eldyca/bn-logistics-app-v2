@@ -16,6 +16,8 @@ export default function Settings() {
     currency: company?.currency || 'USD',
     receipt_footer: company?.receipt_footer || '',
     logo_url: company?.logo_url || '',
+    ad_left: company?.ad_left || '',
+    ad_right: company?.ad_right || '',
   })
   const [busy, setBusy] = useState(false)
   const [msg, setMsg] = useState(null)
@@ -30,6 +32,32 @@ export default function Settings() {
     reader.readAsDataURL(file)
   }
 
+  // Upload banner quảng cáo: thu nhỏ về tối đa rộng 320px để nhẹ, lưu data URL
+  function onAd(side, e) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = () => {
+      const img = new Image()
+      img.onload = () => {
+        const maxW = 320
+        const scale = Math.min(1, maxW / img.width)
+        const w = Math.round(img.width * scale)
+        const h = Math.round(img.height * scale)
+        const canvas = document.createElement('canvas')
+        canvas.width = w; canvas.height = h
+        const ctx = canvas.getContext('2d')
+        ctx.drawImage(img, 0, 0, w, h)
+        let out
+        try { out = canvas.toDataURL('image/jpeg', 0.85) } catch { out = String(reader.result) }
+        set(side, out)
+      }
+      img.onerror = () => set(side, String(reader.result))
+      img.src = String(reader.result)
+    }
+    reader.readAsDataURL(file)
+  }
+
   async function save() {
     setMsg(null)
     setBusy(true)
@@ -41,6 +69,8 @@ export default function Settings() {
         currency: form.currency,
         receipt_footer: form.receipt_footer,
         logo_url: form.logo_url,
+        ad_left: form.ad_left,
+        ad_right: form.ad_right,
       })
       await refreshMembership()
       setMsg(t('settings.saved'))
@@ -120,6 +150,39 @@ export default function Settings() {
           <div className="field full tight">
             <label>{t('settings.receiptFooter')}</label>
             <input value={form.receipt_footer} disabled={!isAdmin} onChange={(e) => set('receipt_footer', e.target.value)} />
+          </div>
+        </div>
+      </div>
+
+      <div className="panel">
+        <div className="phead">Quảng cáo cạnh biên nhận</div>
+        <div className="pbody">
+          <p style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 12 }}>
+            2 banner hiển thị ở khoảng trống hai bên biên nhận (chỉ trên màn hình rộng;
+            không in vào PDF). Thiết kế ảnh dọc, <strong>kích thước khuyến nghị 160 × 600 px</strong>
+            {' '}(tỉ lệ 4:15), định dạng PNG/JPG. Ảnh sẽ tự thu nhỏ vừa cột rộng 160px.
+          </p>
+
+          <div className="field full" style={{ marginBottom: 16 }}>
+            <label>Quảng cáo 1 — bên trái (160 × 600 px)</label>
+            {form.ad_left ? (
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: 8 }}>
+                <img src={form.ad_left} alt="ad-left" style={{ width: 80, border: '1px solid var(--line)', borderRadius: 6 }} />
+                {isAdmin ? <button className="export" onClick={() => set('ad_left', '')}>Xoá</button> : null}
+              </div>
+            ) : null}
+            {isAdmin ? <input type="file" accept="image/*" onChange={(e) => onAd('ad_left', e)} /> : null}
+          </div>
+
+          <div className="field full">
+            <label>Quảng cáo 2 — bên phải (160 × 600 px)</label>
+            {form.ad_right ? (
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: 8 }}>
+                <img src={form.ad_right} alt="ad-right" style={{ width: 80, border: '1px solid var(--line)', borderRadius: 6 }} />
+                {isAdmin ? <button className="export" onClick={() => set('ad_right', '')}>Xoá</button> : null}
+              </div>
+            ) : null}
+            {isAdmin ? <input type="file" accept="image/*" onChange={(e) => onAd('ad_right', e)} /> : null}
           </div>
         </div>
       </div>

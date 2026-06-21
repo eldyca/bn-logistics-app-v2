@@ -124,6 +124,8 @@ export default function Receipt() {
     address: company?.address || '',
     phone: company?.phone || '',
     email: company?.email || '',
+    adLeft: company?.ad_left || '',
+    adRight: company?.ad_right || '',
   }
   const isBank = (order.ben.delivery || '').includes('Chuyển khoản')
   const senderAddr = [order.sender.addr, order.sender.city, order.sender.state, order.sender.zip].filter(Boolean).join(', ')
@@ -133,13 +135,21 @@ export default function Receipt() {
   return (
     <>
       <div className="receipt-actions no-print">
-        <button className="btn btn-ghost" onClick={() => navigate(-1)}>{t('receipt.back')}</button>
+        <button className="btn btn-ghost" onClick={() => navigate('/search-orders')}>{t('receipt.finish')}</button>
+        <button className="btn btn-ghost" onClick={() => navigate('/create')}>{t('receipt.newOrder')}</button>
         <button className="btn btn-ghost" onClick={() => window.print()}>In PDF</button>
         <button className="btn btn-primary" onClick={() => downloadReceiptPdf({ order })}>Tải PDF</button>
       </div>
 
-      <div className="rcpt-scroll">
-        <div className="rcpt-page" id="receipt-sheet">
+      <div className="receipt-stage">
+        {co.adLeft ? (
+          <div className="rcpt-ad rcpt-ad-left no-print">
+            <img src={co.adLeft} alt="Quảng cáo" />
+          </div>
+        ) : null}
+
+        <div className="rcpt-scroll">
+          <div className="rcpt-page" id="receipt-sheet">
           <HeadRow co={co} order={order} />
           <Parties {...parts} />
 
@@ -171,6 +181,13 @@ export default function Receipt() {
             <div><div className="rcpt-sigline" />Received By (Nhận bởi)</div>
           </div>
         </div>
+        </div>
+
+        {co.adRight ? (
+          <div className="rcpt-ad rcpt-ad-right no-print">
+            <img src={co.adRight} alt="Quảng cáo" />
+          </div>
+        ) : null}
       </div>
     </>
   )

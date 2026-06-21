@@ -258,3 +258,11 @@ tr:last-child td{border-bottom:none}
 .perm-chk{display:flex;align-items:center;gap:6px;font-size:12px}
 .perm-chk input{width:auto;height:auto}
 @media(min-width:700px){.perm-grid{grid-template-columns:repeat(4,1fr)}}
+
+/* Sân khấu biên nhận: quảng cáo 2 bên, biên nhận ở giữa (không in vào PDF) */
+.content:has(.receipt-stage){max-width:1200px}
+.receipt-stage{display:flex;justify-content:center;align-items:flex-start;gap:16px}
+.rcpt-ad{flex:0 0 160px;width:160px;position:sticky;top:16px}
+.rcpt-ad img{display:block;width:100%;height:auto;border:1px solid var(--line,#e5e5ea);border-radius:8px}
+@media (max-width:1199px){ .rcpt-ad{display:none} }
+@media print { .receipt-stage{display:block} .rcpt-ad{display:none !important} }

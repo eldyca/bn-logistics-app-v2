@@ -184,9 +184,13 @@ export default function CreateOrder() {
     }
     setBusy(true)
     try {
-      if (editing) await updateOrder(id, payload)
-      else await addOrder(payload)
-      navigate('/search-orders')
+      if (editing) {
+        await updateOrder(id, payload)
+        navigate('/receipt/' + id)
+      } else {
+        const newId = await addOrder(payload)
+        navigate('/receipt/' + newId)
+      }
     } catch (e) {
       alert(e.message || String(e))
     } finally {
