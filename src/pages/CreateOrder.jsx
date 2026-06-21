@@ -36,6 +36,7 @@ export default function CreateOrder() {
   const [rSug, setRSug] = useState([])
   const [rOpen, setROpen] = useState(false)
   const suppressRef = useRef(false)
+  const suppressRRef = useRef(false)
   const sFocusRef = useRef(false)
   const rFocusRef = useRef(false)
 
@@ -55,10 +56,14 @@ export default function CreateOrder() {
         (fn && (x.first || '').toLowerCase().includes(fn)) ||
         (ln && (x.last || '').toLowerCase().includes(ln))
       if (!ok) continue
-      const key = (x.phone || '') + '|' + (x.first || '') + '|' + (x.last || '')
+      // Khoá theo cả CẶP gửi–nhận để mỗi gợi ý là một đơn riêng
+      const s = o.sender || {}, b = o.ben || {}
+      const key = (s.phone || '') + '|' + (s.first || '') + '|' + (s.last || '') + '#' +
+        (b.phone || '') + '|' + (b.first || '') + '|' + (b.last || '')
       if (seen.has(key)) continue
       seen.add(key)
-      out.push(side === 'sender' ? { p: x } : { p: x, bank: o.bank })
+      // p = người khớp để hiển thị dòng chính; other = người đối ứng; order = đơn đầy đủ
+      out.push({ p: x, other: side === 'sender' ? b : s, order: o })
       if (out.length >= 6) break
     }
     return out
@@ -75,6 +80,7 @@ export default function CreateOrder() {
   }, [form.sender.phone, form.sender.first, form.sender.last])
 
   useEffect(() => {
+    if (suppressRRef.current) { suppressRRef.current = false; return }
     const h = setTimeout(() => {
       const rows = matchPeople('ben')
       setRSug(rows); setROpen(rows.length > 0 && rFocusRef.current)
@@ -83,32 +89,31 @@ export default function CreateOrder() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form.ben.phone, form.ben.first, form.ben.last])
 
-  function pickSender(x) {
+  // Bấm 1 gợi ý -> điền CẢ người gửi + người nhận (và ngân hàng) từ đơn cũ
+  function pickPair(order) {
+    if (!order) return
     suppressRef.current = true
+    suppressRRef.current = true
+    const s = order.sender || {}
+    const b = order.ben || {}
     setForm((f) => ({
       ...f,
       sender: {
         ...f.sender,
-        phone: x.phone, first: x.first, last: x.last, middle: x.middle,
-        country: x.country || f.sender.country, state: x.state, city: x.city, zip: x.zip,
-        addr: x.addr, msg: x.msg ?? f.sender.msg, note: x.note ?? f.sender.note,
+        phone: s.phone || '', first: s.first || '', last: s.last || '', middle: s.middle || '',
+        country: s.country || f.sender.country, state: s.state || '', city: s.city || '', zip: s.zip || '',
+        addr: s.addr || '', msg: s.msg ?? f.sender.msg, note: s.note ?? f.sender.note,
       },
-    }))
-    setSSug([]); setSOpen(false)
-  }
-
-  function pickReceiver(x, bank) {
-    setForm((f) => ({
-      ...f,
       ben: {
         ...f.ben,
-        phone: x.phone, phone2: x.phone2 || '', first: x.first, last: x.last,
-        country: x.country || f.ben.country, state: x.state, city: x.city, zip: x.zip,
-        province: x.province || x.state || '', delivery: x.delivery || f.ben.delivery,
-        addr: x.addr, payoutAddr: x.payoutAddr || '',
+        phone: b.phone || '', phone2: b.phone2 || '', first: b.first || '', last: b.last || '',
+        country: b.country || f.ben.country, state: b.state || '', city: b.city || '', zip: b.zip || '',
+        province: b.province || b.state || '', delivery: b.delivery || f.ben.delivery,
+        addr: b.addr || '', payoutAddr: b.payoutAddr || '',
       },
-      bank: bank ? { ...bank } : f.bank,
+      bank: order.bank ? { ...order.bank } : f.bank,
     }))
+    setSSug([]); setSOpen(false)
     setRSug([]); setROpen(false)
   }
 
@@ -117,6 +122,7 @@ export default function CreateOrder() {
       const r = orders.find((o) => String(o.id) === String(id))
       if (r) {
         suppressRef.current = true
+        suppressRRef.current = true
         setForm({
           status: r.status,
           sender: { ...EMPTY.sender, ...r.sender },
@@ -218,10 +224,12 @@ export default function CreateOrder() {
               {sOpen && sSug.length > 0 && (
                 <ul className="ac-list">
                   {sSug.map((s, i) => (
-                    <li key={i} className="ac-item" onMouseDown={(e) => { e.preventDefault(); pickSender(s.p) }}>
+                    <li key={i} className="ac-item" onMouseDown={(e) => { e.preventDefault(); pickPair(s.order) }}>
                       <span className="ac-phone">{s.p.phone}</span>
                       <span className="ac-name">{`${s.p.first} ${s.p.last}`.trim()}</span>
-                      {(s.p.addr || s.p.city) && <span className="ac-addr">{[s.p.addr, s.p.city].filter(Boolean).join(', ')}</span>}
+                      {(s.other?.first || s.other?.last || s.other?.phone) && (
+                        <span className="ac-addr">→ Nhận: {`${s.other.first || ''} ${s.other.last || ''}`.trim()}{s.other.phone ? ` (${s.other.phone})` : ''}</span>
+                      )}
                     </li>
                   ))}
                 </ul>
@@ -265,10 +273,12 @@ export default function CreateOrder() {
                 {rOpen && rSug.length > 0 && (
                   <ul className="ac-list">
                     {rSug.map((s, i) => (
-                      <li key={i} className="ac-item" onMouseDown={(e) => { e.preventDefault(); pickReceiver(s.p, s.bank) }}>
+                      <li key={i} className="ac-item" onMouseDown={(e) => { e.preventDefault(); pickPair(s.order) }}>
                         <span className="ac-phone">{s.p.phone}</span>
                         <span className="ac-name">{`${s.p.first} ${s.p.last}`.trim()}</span>
-                        {(s.p.addr || s.p.city) && <span className="ac-addr">{[s.p.addr, s.p.city].filter(Boolean).join(', ')}</span>}
+                        {(s.other?.first || s.other?.last || s.other?.phone) && (
+                          <span className="ac-addr">← Gửi: {`${s.other.first || ''} ${s.other.last || ''}`.trim()}{s.other.phone ? ` (${s.other.phone})` : ''}</span>
+                        )}
                       </li>
                     ))}
                   </ul>
