@@ -83,11 +83,6 @@ export async function pendingInvitesForMe() {
   return data || []
 }
 
-export async function inviteStaff(email, role = 'staff') {
-  const { error } = await supabase.rpc('invite_staff', { p_email: email, p_role: role })
-  if (error) throw error
-}
-
 // Admin mời/tạo thành viên kèm quyền (perms là object {can_*: bool})
 export async function adminInviteMember(email, role = 'staff', perms = {}) {
   const { error } = await supabase.rpc('admin_invite_member', {
@@ -96,9 +91,12 @@ export async function adminInviteMember(email, role = 'staff', perms = {}) {
   if (error) throw error
 }
 
-// Danh sách thành viên: KHÔNG embed users(*). Dùng RPC security definer trả về email.
+// Danh sách thành viên: company_members là TABLE -> select trực tiếp, KHÔNG dùng RPC.
 export async function listMembers() {
-  const { data, error } = await supabase.rpc('list_company_members')
+  const { data, error } = await supabase
+    .from('company_members')
+    .select('*')
+    .order('created_at', { ascending: true })
   if (error) throw error
   return (data || []).map((m) => ({
     id: m.id,
