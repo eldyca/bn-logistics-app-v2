@@ -112,15 +112,49 @@ exports.handler = async (event) => {
     if (!email || !/^\S+@\S+\.\S+$/.test(email)) return resp(400, { error: 'Email không hợp lệ', stage: 'validate', email })
     if (password.length < 6) return resp(400, { error: 'Mật khẩu tạm phải từ 6 ký tự trở lên', stage: 'validate' })
 
-    // 6) Tạo user trong Auth
-    const { data: created, error: cErr } = await admin.auth.admin.createUser({
-      email, password, email_confirm: true,
-    })
-    if (cErr || !created || !created.user) {
-      console.error('[create-member] createUser lỗi:', describe(cErr))
-      return resp(400, { error: (cErr && cErr.message) || 'Không tạo được tài khoản (email có thể đã tồn tại)', stage: 'create-user', ...describe(cErr) })
+    // 6) Tạo user trong Auth — gọi TRỰC TIẾP Supabase Auth Admin API (không dùng client createUser)
+    let createRes, createText
+    try {
+      createRes = await fetch(`${SUPABASE_URL}/auth/v1/admin/users`, {
+        method: 'POST',
+        headers: {
+          apikey: SERVICE_ROLE,
+          Authorization: `Bearer ${SERVICE_ROLE}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password, email_confirm: true, user_metadata: { role } }),
+      })
+      createText = await createRes.text()
+    } catch (e) {
+      console.error('[create-member] fetch Auth Admin API lỗi (network):', describe(e))
+      return resp(502, { error: 'Không gọi được Supabase Auth Admin API', stage: 'create-user-fetch', ...describe(e) })
     }
-    const newId = created.user.id
+
+    if (!createRes.ok) {
+      console.error('[create-member] createUser HTTP', createRes.status, '— response:', createText)
+      let parsed = null
+      try { parsed = JSON.parse(createText) } catch { /* not json */ }
+      const apiMsg = parsed && (parsed.msg || parsed.message || parsed.error_description || parsed.error)
+      return resp(createRes.status === 422 ? 400 : 502, {
+        error: apiMsg || 'Không tạo được tài khoản (email có thể đã tồn tại)',
+        stage: 'create-user',
+        http_status: createRes.status,
+        response: createText,
+      })
+    }
+
+    let createdUser
+    try {
+      createdUser = JSON.parse(createText)
+    } catch (e) {
+      console.error('[create-member] parse response createUser lỗi — response:', createText)
+      return resp(500, { error: 'Phản hồi tạo user không phải JSON', stage: 'create-user-parse', response: createText, ...describe(e) })
+    }
+    const newId = createdUser && (createdUser.id || (createdUser.user && createdUser.user.id))
+    if (!newId) {
+      console.error('[create-member] Không tìm thấy user id trong response:', createText)
+      return resp(500, { error: 'Không lấy được user id sau khi tạo', stage: 'create-user-id', response: createText })
+    }
 
     // 7) Đảm bảo public.users
     const { error: upErr } = await admin.from('users').upsert({ id: newId, email }, { onConflict: 'id' })
