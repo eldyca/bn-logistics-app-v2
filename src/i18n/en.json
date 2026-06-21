@@ -254,8 +254,11 @@
     "active": "Active",
     "lock": "Lock",
     "unlock": "Unlock",
-    "createMember": "Create member",
-    "locked": "Locked"
+    "createMember": "Create member account",
+    "locked": "Locked",
+    "createAccount": "Create account",
+    "tempPassword": "Temporary password",
+    "created": "Account created"
   },
   "common": {
     "loading": "Loading…",

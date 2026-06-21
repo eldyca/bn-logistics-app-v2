@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useAuth } from '../context/AuthContext'
 import { useOrders } from '../context/OrdersContext'
 import {
-  listMembers, listInvitations, adminInviteMember, removeMember,
+  listMembers, adminCreateMember, removeMember,
   setMemberRole, setMemberPermissions, setMemberActive,
 } from '../lib/supabase'
 import { exportOrders } from '../lib/exportCsv'
@@ -25,20 +25,20 @@ export default function Company() {
   const myId = user?.id
 
   const [members, setMembers] = useState([])
-  const [invites, setInvites] = useState([])
   const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [inviteRole, setInviteRole] = useState('staff')
   const [invitePerms, setInvitePerms] = useState({ ...DEFAULT_PERMS })
+  const [creating, setCreating] = useState(false)
   const [msg, setMsg] = useState(null)
 
   const load = useCallback(async () => {
     try {
       setMembers(await listMembers())
-      if (isAdmin) setInvites(await listInvitations())
     } catch (e) {
       setMsg(e.message || String(e))
     }
-  }, [isAdmin])
+  }, [])
 
   useEffect(() => { load() }, [load])
 
@@ -47,13 +47,23 @@ export default function Company() {
     try { await fn(); await load() } catch (e) { setMsg(e.message || String(e)) }
   }
 
-  async function doInvite() {
-    if (!email.trim()) return
-    await run(async () => {
-      await adminInviteMember(email.trim(), inviteRole, invitePerms)
-      setEmail(''); setInvitePerms({ ...DEFAULT_PERMS })
-      setMsg(t('company.invited'))
-    })
+  async function doCreate() {
+    setMsg(null)
+    if (!email.trim() || password.length < 6) {
+      setMsg('Email và mật khẩu tạm (≥ 6 ký tự) là bắt buộc')
+      return
+    }
+    setCreating(true)
+    try {
+      await adminCreateMember(email.trim(), password, inviteRole, invitePerms)
+      setEmail(''); setPassword(''); setInvitePerms({ ...DEFAULT_PERMS })
+      setMsg(t('company.created'))
+      await load()
+    } catch (e) {
+      setMsg(e.message || String(e))
+    } finally {
+      setCreating(false)
+    }
   }
 
   async function handleClear() {
@@ -83,13 +93,15 @@ export default function Company() {
           <div className="pbody">
             <div className="grid">
               <div className="field tight"><label>{t('company.inviteEmail')}</label>
-                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="staff@email.com" /></div>
-              <div className="field tight"><label>{t('company.role')}</label>
-                <select value={inviteRole} onChange={(e) => setInviteRole(e.target.value)}>
-                  <option value="staff">{t('company.staff')}</option>
-                  <option value="admin">{t('company.admin')}</option>
-                </select></div>
+                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="staff@email.com" autoComplete="off" /></div>
+              <div className="field tight"><label>{t('company.tempPassword')}</label>
+                <input type="text" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="≥ 6 ký tự" autoComplete="new-password" /></div>
             </div>
+            <div className="field tight" style={{ marginTop: 12 }}><label>{t('company.role')}</label>
+              <select value={inviteRole} onChange={(e) => setInviteRole(e.target.value)}>
+                <option value="staff">{t('company.staff')}</option>
+                <option value="admin">{t('company.admin')}</option>
+              </select></div>
             <div style={{ marginTop: 12 }}>
               <label style={{ fontSize: 12, fontWeight: 600 }}>{t('company.permissions')}</label>
               <div className="perm-grid">
@@ -102,8 +114,12 @@ export default function Company() {
                 ))}
               </div>
             </div>
-            <button className="searchbtn" style={{ marginTop: 14 }} onClick={doInvite}>{t('company.sendInvite')}</button>
-            <p style={{ fontSize: 12, color: 'var(--muted)', marginTop: 8 }}>{t('auth.contactAdmin')}</p>
+            <button className="searchbtn" style={{ marginTop: 14 }} onClick={doCreate} disabled={creating}>
+              {creating ? '…' : t('company.createAccount')}
+            </button>
+            <p style={{ fontSize: 12, color: 'var(--muted)', marginTop: 8 }}>
+              Admin tự đưa email + mật khẩu tạm cho nhân viên (không gửi email mời).
+            </p>
           </div>
         </div>
       ) : null}
@@ -152,20 +168,6 @@ export default function Company() {
           })}
         </div>
       </div>
-
-      {isAdmin && invites.length > 0 ? (
-        <div className="panel">
-          <div className="phead">{t('company.pendingInvites')}</div>
-          <div className="pbody">
-            {invites.map((iv) => (
-              <div key={iv.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid var(--line)' }}>
-                <span>{iv.email} <span className="pill">{iv.role}</span></span>
-                <span style={{ fontSize: 12, color: 'var(--muted)' }}>{iv.accepted ? t('company.accepted') : t('company.waiting')}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      ) : null}
 
       <div className="panel">
         <div className="phead">{t('company.data')}</div>

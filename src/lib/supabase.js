@@ -91,6 +91,24 @@ export async function adminInviteMember(email, role = 'staff', perms = {}) {
   if (error) throw error
 }
 
+// Admin tạo TRỰC TIẾP tài khoản nhân viên (email + mật khẩu tạm) qua Edge Function
+// dùng service_role. Không gửi email mời.
+export async function adminCreateMember(email, password, role = 'staff', perms = {}) {
+  const { data, error } = await supabase.functions.invoke('create-member', {
+    body: { email, password, role, perms },
+  })
+  if (error) {
+    let msg = error.message || 'Tạo tài khoản thất bại'
+    try {
+      const ctx = await error.context?.json?.()
+      if (ctx?.error) msg = ctx.error
+    } catch { /* ignore */ }
+    throw new Error(msg)
+  }
+  if (data?.error) throw new Error(data.error)
+  return data
+}
+
 // Danh sách thành viên: company_members là TABLE -> select trực tiếp, KHÔNG dùng RPC.
 export async function listMembers() {
   const { data, error } = await supabase

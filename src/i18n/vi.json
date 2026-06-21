@@ -254,8 +254,11 @@
     "active": "Hoạt động",
     "lock": "Khóa",
     "unlock": "Mở khóa",
-    "createMember": "Tạo nhân viên",
-    "locked": "Đã khóa"
+    "createMember": "Tạo tài khoản nhân viên",
+    "locked": "Đã khóa",
+    "createAccount": "Tạo tài khoản",
+    "tempPassword": "Mật khẩu tạm",
+    "created": "Đã tạo tài khoản"
   },
   "common": {
     "loading": "Đang tải…",
