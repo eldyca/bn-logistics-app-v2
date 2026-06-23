@@ -18,34 +18,34 @@ const LEGAL = [
     tvi: 'QUYỀN ĐƯỢC HOÀN TIỀN',
     ten: 'RIGHT TO A REFUND',
     paras: [
-      { text: 'Người gửi sẽ được hoàn lại tiền nếu trong vòng 10 ngày kể từ ngày Công Ty nhận tiền của quý vị mà không chuyển được số tiền đó hoặc không giao được cho người nhận mà quý vị đã chỉ định, trừ khi người gửi có chỉ thị khác.' },
       { en: true, text: 'The sender is entitled to a refund if, within 10 days after the Company receives the sender’s funds, the Company fails to transfer the money or fails to deliver it to the designated recipient, unless the sender has provided other instructions.' },
-      { text: 'Khi số tiền chưa được chuyển giao theo yêu cầu của người gửi, người gửi có quyền yêu cầu hoàn lại tiền. Để nhận lại tiền, người gửi phải mang biên nhận gốc đến văn phòng Công Ty.' },
+      { text: 'Người gửi sẽ được hoàn lại tiền nếu trong vòng 10 ngày kể từ ngày Công Ty nhận tiền của quý vị mà không chuyển được số tiền đó hoặc không giao được cho người nhận mà quý vị đã chỉ định, trừ khi người gửi có chỉ thị khác.' },
       { en: true, text: 'If the funds have not been transferred in accordance with the sender’s instructions, the sender has the right to request a refund. To receive the refund, the sender must present the original receipt at the Company’s office.' },
+      { text: 'Khi số tiền chưa được chuyển giao theo yêu cầu của người gửi, người gửi có quyền yêu cầu hoàn lại tiền. Để nhận lại tiền, người gửi phải mang biên nhận gốc đến văn phòng Công Ty.' },
     ],
   },
   {
     tvi: 'QUYỀN CỦA NGƯỜI GỬI ĐỐI VỚI VIỆC HỦY GIAO DỊCH VÀ HOÀN TIỀN',
     ten: "SENDER'S RIGHT TO CANCEL AND RECEIVE A REFUND",
     paras: [
-      { text: 'Quý vị có thể hủy giao dịch và được hoàn lại toàn bộ số tiền trong vòng ba mươi (30) phút kể từ thời điểm thanh toán, trừ khi khoản tiền đó đã được người nhận nhận hoặc đã được ghi có vào tài khoản.' },
       { en: true, text: 'You may cancel the transaction and receive a full refund within thirty (30) minutes of payment, unless the funds have already been received by the beneficiary or deposited into an account.' },
+      { text: 'Quý vị có thể hủy giao dịch và được hoàn lại toàn bộ số tiền trong vòng ba mươi (30) phút kể từ thời điểm thanh toán, trừ khi khoản tiền đó đã được người nhận nhận hoặc đã được ghi có vào tài khoản.' },
     ],
   },
   {
     tvi: 'GIẢI QUYẾT SAI SÓT',
     ten: 'ERROR RESOLUTION',
     paras: [
-      { text: 'Nếu quý vị cho rằng có sai sót trong giao dịch của mình, vui lòng liên hệ với chúng tôi qua số điện thoại (626) 885-8259 trong vòng bốn mươi tám (48) giờ.' },
       { en: true, text: 'If you believe there is an error in your transaction, please contact us at (626) 885-8259 within forty-eight (48) hours.' },
+      { text: 'Nếu quý vị cho rằng có sai sót trong giao dịch của mình, vui lòng liên hệ với chúng tôi qua số điện thoại (626) 885-8259 trong vòng bốn mươi tám (48) giờ.' },
     ],
   },
   {
     tvi: 'CHÍNH SÁCH QUYỀN RIÊNG TƯ',
     ten: 'PRIVACY POLICY',
     paras: [
-      { text: 'Chúng tôi không tiết lộ bất kỳ thông tin cá nhân hoặc thông tin tài chính không công khai nào của khách hàng cho bên thứ ba, ngoại trừ các trường hợp được pháp luật cho phép hoặc cần thiết để xử lý và thực hiện giao dịch mà quý khách đã yêu cầu và cho phép.' },
       { en: true, text: 'We do not disclose any non-public personal or financial information of its customers to third parties, except as permitted by law or as necessary to process and complete transactions requested and authorized by the customer.' },
+      { text: 'Chúng tôi không tiết lộ bất kỳ thông tin cá nhân hoặc thông tin tài chính không công khai nào của khách hàng cho bên thứ ba, ngoại trừ các trường hợp được pháp luật cho phép hoặc cần thiết để xử lý và thực hiện giao dịch mà quý khách đã yêu cầu và cho phép.' },
     ],
   },
 ]
@@ -163,8 +163,8 @@ export default function Receipt() {
               <div className="rcpt-legal-sec" key={i}>
                 {s.tvi ? (
                   <>
-                    <div className="rcpt-legal-ttl">{s.tvi}</div>
                     <div className="rcpt-legal-ttl">{s.ten}</div>
+                    <div className="rcpt-legal-ttl">{s.tvi}</div>
                   </>
                 ) : (
                   <div className="rcpt-legal-ttl">{s.t}</div>
