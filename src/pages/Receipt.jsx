@@ -25,19 +25,28 @@ const LEGAL = [
     ],
   },
   {
-    t: "SENDER'S RIGHT TO CANCEL AND RECEIVE A REFUND / QUYỀN CỦA NGƯỜI GỬI ĐỐI VỚI VIỆC HỦY GIAO DỊCH VÀ HOÀN TIỀN",
-    en: 'You may cancel the transaction and receive a full refund within thirty (30) minutes of payment, unless the funds have already been received by the beneficiary or deposited into an account.',
-    vi: 'Quý vị có thể hủy giao dịch và được hoàn lại toàn bộ số tiền trong vòng ba mươi (30) phút kể từ thời điểm thanh toán, trừ khi khoản tiền đó đã được người nhận nhận hoặc đã được ghi có vào tài khoản.',
+    tvi: 'QUYỀN CỦA NGƯỜI GỬI ĐỐI VỚI VIỆC HỦY GIAO DỊCH VÀ HOÀN TIỀN',
+    ten: "SENDER'S RIGHT TO CANCEL AND RECEIVE A REFUND",
+    paras: [
+      { text: 'Quý vị có thể hủy giao dịch và được hoàn lại toàn bộ số tiền trong vòng ba mươi (30) phút kể từ thời điểm thanh toán, trừ khi khoản tiền đó đã được người nhận nhận hoặc đã được ghi có vào tài khoản.' },
+      { en: true, text: 'You may cancel the transaction and receive a full refund within thirty (30) minutes of payment, unless the funds have already been received by the beneficiary or deposited into an account.' },
+    ],
   },
   {
-    t: 'ERROR RESOLUTION / GIẢI QUYẾT SAI SÓT',
-    en: 'If you believe there is an error in your transaction, please contact us at (626) 885-8259 within forty-eight (48) hours.',
-    vi: 'Nếu quý vị cho rằng có sai sót trong giao dịch của mình, vui lòng liên hệ với chúng tôi qua số điện thoại (626) 885-8259 trong vòng bốn mươi tám (48) giờ.',
+    tvi: 'GIẢI QUYẾT SAI SÓT',
+    ten: 'ERROR RESOLUTION',
+    paras: [
+      { text: 'Nếu quý vị cho rằng có sai sót trong giao dịch của mình, vui lòng liên hệ với chúng tôi qua số điện thoại (626) 885-8259 trong vòng bốn mươi tám (48) giờ.' },
+      { en: true, text: 'If you believe there is an error in your transaction, please contact us at (626) 885-8259 within forty-eight (48) hours.' },
+    ],
   },
   {
-    t: 'PRIVACY POLICY / CHÍNH SÁCH QUYỀN RIÊNG TƯ',
-    en: 'We does not disclose any non-public personal or financial information of its customers to third parties, except as permitted by law or as necessary to process and complete transactions requested and authorized by the customer.',
-    vi: 'Chúng tôi không tiết lộ bất kỳ thông tin cá nhân hoặc thông tin tài chính không công khai nào của khách hàng cho bên thứ ba, ngoại trừ các trường hợp được pháp luật cho phép hoặc cần thiết để xử lý và thực hiện giao dịch mà quý khách đã yêu cầu và cho phép.',
+    tvi: 'CHÍNH SÁCH QUYỀN RIÊNG TƯ',
+    ten: 'PRIVACY POLICY',
+    paras: [
+      { text: 'Chúng tôi không tiết lộ bất kỳ thông tin cá nhân hoặc thông tin tài chính không công khai nào của khách hàng cho bên thứ ba, ngoại trừ các trường hợp được pháp luật cho phép hoặc cần thiết để xử lý và thực hiện giao dịch mà quý khách đã yêu cầu và cho phép.' },
+      { en: true, text: 'We do not disclose any non-public personal or financial information of its customers to third parties, except as permitted by law or as necessary to process and complete transactions requested and authorized by the customer.' },
+    ],
   },
 ]
 
