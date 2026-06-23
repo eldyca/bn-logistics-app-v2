@@ -15,9 +15,14 @@ const STATUS_BI = {
 
 const LEGAL = [
   {
-    t: 'RIGHT TO REFUND / QUYỀN ĐƯỢC HOÀN TIỀN',
-    en: 'You, as the customer, are entitled to a refund of the money transmitted under this agreement if the Company does not forward the funds received from you within ten (10) days of receipt, or does not transmit an equivalent amount to the beneficiary designated by you within ten (10) days of receiving the funds, unless otherwise instructed by you. If your instructions regarding the timing of the transfer are not followed and the funds have not yet been transmitted, you are entitled to a full refund of your money.',
-    vi: 'Quý vị, với tư cách là khách hàng, có quyền được hoàn trả số tiền chuyển theo thỏa thuận này nếu Công Ty không thực hiện việc chuyển số tiền đã nhận từ quý vị trong vòng mười (10) ngày kể từ ngày nhận tiền, hoặc không thực hiện việc chuyển một khoản tiền tương đương cho người thụ hưởng do quý vị chỉ định trong vòng mười (10) ngày kể từ ngày nhận tiền, trừ khi quý vị có chỉ thị khác. Nếu chỉ thị của quý vị về thời điểm chuyển tiền không được thực hiện và số tiền đó vẫn chưa được chuyển đi, quý vị có quyền được hoàn lại toàn bộ số tiền của mình.',
+    tvi: 'QUYỀN ĐƯỢC HOÀN TIỀN',
+    ten: 'RIGHT TO A REFUND',
+    paras: [
+      { text: 'Người gửi sẽ được hoàn lại tiền nếu trong vòng 10 ngày kể từ ngày Công Ty nhận tiền của quý vị mà không chuyển được số tiền đó hoặc không giao được cho người nhận mà quý vị đã chỉ định, trừ khi người gửi có chỉ thị khác.' },
+      { en: true, text: 'The sender is entitled to a refund if, within 10 days after the Company receives the sender’s funds, the Company fails to transfer the money or fails to deliver it to the designated recipient, unless the sender has provided other instructions.' },
+      { text: 'Khi số tiền chưa được chuyển giao theo yêu cầu của người gửi, người gửi có quyền yêu cầu hoàn lại tiền. Để nhận lại tiền, người gửi phải mang biên nhận gốc đến văn phòng Công Ty.' },
+      { en: true, text: 'If the funds have not been transferred in accordance with the sender’s instructions, the sender has the right to request a refund. To receive the refund, the sender must present the original receipt at the Company’s office.' },
+    ],
   },
   {
     t: "SENDER'S RIGHT TO CANCEL AND RECEIVE A REFUND / QUYỀN CỦA NGƯỜI GỬI ĐỐI VỚI VIỆC HỦY GIAO DỊCH VÀ HOÀN TIỀN",
@@ -81,16 +86,9 @@ function Parties({ order, isBank, senderAddr, recvAddr }) {
 function HeadRow({ co, order }) {
   return (
     <div className="rcpt-head3">
-      <div className="rcpt-h-left">
-        <div className="rcpt-coname">{co.name}</div>
-        {co.address ? <div>{co.address}</div> : null}
-        {co.phone ? <div>Tel / ĐT: {co.phone}</div> : null}
-        {co.email ? <div>Email: {co.email}</div> : null}
-      </div>
+      <div className="rcpt-h-left"></div>
       <div className="rcpt-h-center">
         <div className="rcpt-bigttl">CUSTOMER RECEIPT</div>
-        <div className="rcpt-subttl">Đại lý (Authorized Agent)</div>
-        <div className="rcpt-agent">{co.name}</div>
       </div>
       <div className="rcpt-h-right">
         <table className="rcpt-meta"><tbody>
@@ -154,9 +152,24 @@ export default function Receipt() {
           <div className="rcpt-legal">
             {LEGAL.map((s, i) => (
               <div className="rcpt-legal-sec" key={i}>
-                <div className="rcpt-legal-ttl">{s.t}</div>
-                <div className="rcpt-legal-en">{s.en}</div>
-                <div className="rcpt-legal-vi">{s.vi}</div>
+                {s.tvi ? (
+                  <>
+                    <div className="rcpt-legal-ttl">{s.tvi}</div>
+                    <div className="rcpt-legal-ttl">{s.ten}</div>
+                  </>
+                ) : (
+                  <div className="rcpt-legal-ttl">{s.t}</div>
+                )}
+                {s.paras ? (
+                  s.paras.map((p, j) => (
+                    <div className={p.en ? 'rcpt-legal-en' : 'rcpt-legal-vi'} key={j}>{p.text}</div>
+                  ))
+                ) : (
+                  <>
+                    <div className="rcpt-legal-en">{s.en}</div>
+                    <div className="rcpt-legal-vi">{s.vi}</div>
+                  </>
+                )}
               </div>
             ))}
           </div>
