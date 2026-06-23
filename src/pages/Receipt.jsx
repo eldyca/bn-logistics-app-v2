@@ -94,18 +94,13 @@ function Parties({ order, isBank, senderAddr, recvAddr }) {
 
 function HeadRow({ co, order }) {
   return (
-    <div className="rcpt-head3">
-      <div className="rcpt-h-left"></div>
-      <div className="rcpt-h-center">
-        <div className="rcpt-bigttl">CUSTOMER RECEIPT</div>
-      </div>
-      <div className="rcpt-h-right">
-        <table className="rcpt-meta"><tbody>
-          <tr><td>Order No:</td><td>{order.code}</td></tr>
-          <tr><td>Date / Ngày:</td><td>{fdate(order.createdAt)}</td></tr>
-          <tr><td>Status:</td><td>{STATUS_BI[order.status] || order.status}</td></tr>
-          <tr><td>Employee / Nhân viên:</td><td>{order.employee || '—'}</td></tr>
-        </tbody></table>
+    <div className="rcpt-head">
+      <div className="rcpt-bigttl">CUSTOMER RECEIPT</div>
+      <div className="rcpt-metarow">
+        <span><b>Order No:</b> {order.code}</span>
+        <span><b>Date / Ngày:</b> {fdate(order.createdAt)}</span>
+        <span><b>Status:</b> {STATUS_BI[order.status] || order.status}</span>
+        <span><b>Employee / Nhân viên:</b> {order.employee || '—'}</span>
       </div>
     </div>
   )
@@ -162,10 +157,7 @@ export default function Receipt() {
             {LEGAL.map((s, i) => (
               <div className="rcpt-legal-sec" key={i}>
                 {s.tvi ? (
-                  <>
-                    <div className="rcpt-legal-ttl">{s.ten}</div>
-                    <div className="rcpt-legal-ttl">{s.tvi}</div>
-                  </>
+                  <div className="rcpt-legal-ttl">{s.ten} / {s.tvi}</div>
                 ) : (
                   <div className="rcpt-legal-ttl">{s.t}</div>
                 )}

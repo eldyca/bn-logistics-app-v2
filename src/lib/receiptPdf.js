@@ -36,9 +36,9 @@ export async function downloadReceiptPdf({ order } = {}) {
   }
 
   // Letter: 215.9 x 279.4 mm
-  const doc = new jsPDF({ unit: 'mm', format: 'letter' })
-  const pageW = 215.9
-  const pageH = 279.4
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' })
+  const pageW = 210
+  const pageH = 297
   const margin = 8
   const maxW = pageW - margin * 2
   const maxH = pageH - margin * 2
