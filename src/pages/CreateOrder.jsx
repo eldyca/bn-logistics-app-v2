@@ -170,6 +170,7 @@ export default function CreateOrder() {
     if (!form.ben.phone.trim()) miss.push(t('order.receiverInfo'))
     if (!form.ben.first.trim() || !form.ben.last.trim()) miss.push(t('order.firstName'))
     if (num(form.tx.send) <= 0) miss.push(t('order.sendAmount'))
+    if (!form.employee.trim()) miss.push(t('order.employee'))
     if (miss.length) {
       alert(t('order.fillRequired') + miss.join(', '))
       return
@@ -393,7 +394,7 @@ export default function CreateOrder() {
           </div>
           <div className="field full tight"><label>{t('order.memo')}</label>
             <textarea value={form.tx.memo} onChange={(e) => set('tx', 'memo', e.target.value)} /></div>
-          <div className="field full tight"><label>{t('order.employee')}</label>
+          <div className="field full tight"><label>{t('order.employee')} <span className="r">*</span></label>
             <input value={form.employee} onChange={(e) => setForm((f) => ({ ...f, employee: e.target.value }))} placeholder={t('order.employee')} /></div>
         </div>
       </div>
