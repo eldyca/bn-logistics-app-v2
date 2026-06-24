@@ -193,7 +193,7 @@ tr:last-child td{border-bottom:none}
 /* ===== Biên nhận: khổ Letter (8.5x11in), kiểu Anh Minh, trắng đen, serif ===== */
 .rcpt-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
 .rcpt-page{background:#fff;color:#000;margin:0 auto;width:8.5in;max-width:8.5in;padding:0.3in;
-  font-family:'Times New Roman',Times,Georgia,serif;font-size:10.5px;line-height:1.3;box-sizing:border-box}
+  font-family:'Times New Roman',Times,Georgia,serif;font-size:10.5px;line-height:1.28;box-sizing:border-box}
 .rcpt-page *{box-sizing:border-box}
 
 /* Header 3 phần: trái = công ty | giữa = tiêu đề | phải = thông tin đơn */
@@ -218,20 +218,20 @@ tr:last-child td{border-bottom:none}
 .rcpt-grid{width:100%;border-collapse:collapse;table-layout:fixed}
 .rcpt-grid th{border:1px solid #000;background:#fff;color:#000;font-size:11.5px;text-transform:uppercase;
   letter-spacing:.04em;padding:4px 8px;text-align:center;width:50%}
-.rcpt-grid td{border:1px solid #000;vertical-align:top;padding:4px 8px;width:50%;font-size:11px}
+.rcpt-grid td{border:1px solid #000;vertical-align:top;padding:3px 8px;width:50%;font-size:10.5px}
 .rcpt-line{margin-bottom:1px;word-break:break-word}
 .rcpt-line .lk{font-style:italic}
 .rcpt-line .lv{font-weight:700}
 
-.rcpt-signs{display:flex;gap:30px;margin:8px 0 4px}
+.rcpt-signs{display:flex;gap:30px;margin:4px 0 2px}
 .rcpt-signs>div{flex:1;font-size:10px}
-.rcpt-sigline{border-top:1px solid #000;margin:14px 0 4px}
+.rcpt-sigline{border-top:1px solid #000;margin:8px 0 2px}
 
-.rcpt-legal{border-top:1px solid #000;padding-top:4px;margin-top:4px}
-.rcpt-legal-sec{margin-bottom:3px}
-.rcpt-legal-ttl{font-weight:700;font-size:9.5px;text-transform:uppercase}
-.rcpt-legal-en{font-size:9px;text-align:justify;line-height:1.3}
-.rcpt-legal-vi{font-size:9px;font-style:italic;text-align:justify;line-height:1.3}
+.rcpt-legal{border-top:1px solid #000;padding-top:3px;margin-top:3px}
+.rcpt-legal-sec{margin-bottom:2px}
+.rcpt-legal-ttl{font-weight:700;font-size:11px;text-transform:uppercase}
+.rcpt-legal-en{font-size:10.5px;text-align:justify;line-height:1.28}
+.rcpt-legal-vi{font-size:10.5px;font-style:italic;text-align:justify;line-height:1.28}
 
 .rcpt-copydiv{text-align:center;font-size:9px;letter-spacing:.05em;margin:5px 0 4px;color:#000}
 .rcpt-copymeta{display:flex;gap:16px;flex-wrap:wrap;font-size:10px;margin-bottom:4px}
