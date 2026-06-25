@@ -223,9 +223,8 @@ tr:last-child td{border-bottom:none}
 .rcpt-line .lk{font-style:italic}
 .rcpt-line .lv{font-weight:700}
 
-.rcpt-signs{display:flex;gap:30px;margin:8px 0 4px}
-.rcpt-signs>div{flex:1;font-size:12px}
-.rcpt-sigline{border-top:1px solid #000;margin:16px 0 4px}
+.rcpt-sigrow td{font-size:12px;vertical-align:bottom}
+.rcpt-sigspace{height:30px}
 
 .rcpt-legal{border-top:1px solid #000;padding-top:5px;margin-top:5px}
 .rcpt-legal-sec{margin-bottom:4px}

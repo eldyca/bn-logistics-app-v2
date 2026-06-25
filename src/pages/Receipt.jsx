@@ -87,6 +87,10 @@ function Parties({ order, isBank, senderAddr, recvAddr }) {
           <Line k="Message (Lời nhắn)" v={order.sender.msg} />
           <Line k="Notes (Ghi chú)" v={order.tx.memo} />
         </td>
+      </tr>
+      <tr className="rcpt-sigrow">
+        <td><div className="rcpt-sigspace" />Sender's Signature (Chữ ký người gửi)</td>
+        <td><div className="rcpt-sigspace" />Received By (Nhận bởi)</td>
       </tr></tbody>
     </table>
   )
@@ -148,11 +152,6 @@ export default function Receipt() {
           <HeadRow co={co} order={order} />
           <Parties {...parts} />
 
-          <div className="rcpt-signs">
-            <div><div className="rcpt-sigline" />Sender's Signature (Chữ ký người gửi)</div>
-            <div><div className="rcpt-sigline" />Received By (Nhận bởi)</div>
-          </div>
-
           <div className="rcpt-legal">
             {LEGAL.map((s, i) => (
               <div className="rcpt-legal-sec" key={i}>
@@ -183,10 +182,6 @@ export default function Receipt() {
             <span><b>Employee / Nhân viên:</b> {order.employee || '—'}</span>
           </div>
           <Parties {...parts} />
-          <div className="rcpt-signs">
-            <div><div className="rcpt-sigline" />Sender's Signature (Chữ ký người gửi)</div>
-            <div><div className="rcpt-sigline" />Received By (Nhận bởi)</div>
-          </div>
         </div>
       </div>
     </>
