@@ -139,8 +139,8 @@ export default function Receipt() {
       <div className="receipt-actions no-print">
         <button className="btn btn-ghost" onClick={() => navigate('/search-orders')}>{t('receipt.finish')}</button>
         <button className="btn btn-ghost" onClick={() => navigate('/create')}>{t('receipt.newOrder')}</button>
-        <button className="btn btn-ghost" onClick={() => window.print()}>In PDF</button>
-        <button className="btn btn-primary" onClick={() => downloadReceiptPdf({ order })}>Tải PDF</button>
+        <button className="btn btn-primary" onClick={() => downloadReceiptPdf({ order })}>Tải / In PDF (1 trang Letter)</button>
+        <button className="btn btn-ghost" onClick={() => window.print()} title="Có thể bị tràn 2 trang trên một số trình duyệt">In bằng trình duyệt</button>
       </div>
 
       <div className="rcpt-scroll">
