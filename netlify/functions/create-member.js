@@ -104,13 +104,26 @@ exports.handler = async (event) => {
       return resp(403, { error: 'Chỉ admin đang hoạt động mới được tạo tài khoản', stage: 'check-admin', role: me && me.role, active: me && me.active })
     }
 
-    // 5) Input
-    const email = String(body.email || '').trim().toLowerCase()
+    // 5) Input: identifier có thể là username HOẶC email; full_name bắt buộc
+    const identifier = String(body.identifier || body.email || '').trim()
+    const fullName = String(body.full_name || '').trim()
     const password = String(body.password || '')
     const role = body.role === 'admin' ? 'admin' : 'staff'
     const perms = body.perms || {}
-    if (!email || !/^\S+@\S+\.\S+$/.test(email)) return resp(400, { error: 'Email không hợp lệ', stage: 'validate', email })
-    if (password.length < 6) return resp(400, { error: 'Mật khẩu tạm phải từ 6 ký tự trở lên', stage: 'validate' })
+    if (!identifier) return resp(400, { error: 'Thiếu username/email nhân viên', stage: 'validate' })
+    if (!fullName) return resp(400, { error: 'Bắt buộc nhập tên nhân viên', stage: 'validate' })
+    if (password.length < 6) return resp(400, { error: 'Mật khẩu khởi tạo phải từ 6 ký tự trở lên', stage: 'validate' })
+
+    // Có '@' -> email thật. Không '@' -> username, sinh email nội bộ để Auth hoạt động.
+    let email, username
+    if (identifier.includes('@')) {
+      email = identifier.toLowerCase()
+      username = (body.username && String(body.username).trim()) || null
+      if (!/^\S+@\S+\.\S+$/.test(email)) return resp(400, { error: 'Email không hợp lệ', stage: 'validate', email })
+    } else {
+      username = identifier
+      email = identifier.toLowerCase() + '@bnlogistics.local'
+    }
 
     // 6) Tạo user trong Auth — gọi TRỰC TIẾP Supabase Auth Admin API (không dùng client createUser)
     let createRes, createText
@@ -122,7 +135,10 @@ exports.handler = async (event) => {
           Authorization: `Bearer ${SERVICE_ROLE}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, password, email_confirm: true, user_metadata: { role } }),
+        body: JSON.stringify({
+          email, password, email_confirm: true,
+          user_metadata: { role, full_name: fullName, display_name: fullName, username: username || undefined },
+        }),
       })
       createText = await createRes.text()
     } catch (e) {
@@ -156,9 +172,20 @@ exports.handler = async (event) => {
       return resp(500, { error: 'Không lấy được user id sau khi tạo', stage: 'create-user-id', response: createText })
     }
 
-    // 7) Đảm bảo public.users
+    // 7) Đảm bảo public.users + user_profiles (phòng khi trigger chưa lưu kịp)
     const { error: upErr } = await admin.from('users').upsert({ id: newId, email }, { onConflict: 'id' })
     if (upErr) console.error('[create-member] upsert public.users (bỏ qua được):', describe(upErr))
+
+    const profileRow = { user_id: newId, full_name: fullName, display_name: fullName }
+    if (username) profileRow.username = username
+    const { error: pErr } = await admin.from('user_profiles').upsert(profileRow, { onConflict: 'user_id' })
+    if (pErr) {
+      // username trùng -> báo lỗi rõ + rollback user vừa tạo
+      console.error('[create-member] upsert user_profiles lỗi -> rollback:', describe(pErr))
+      await admin.auth.admin.deleteUser(newId).catch(() => {})
+      const dup = (pErr.code === '23505') || /duplicate|unique/i.test(pErr.message || '')
+      return resp(400, { error: dup ? 'Username đã tồn tại, hãy chọn tên khác' : 'Lưu hồ sơ người dùng lỗi (đã rollback)', stage: 'upsert-profile', ...describe(pErr) })
+    }
 
     // 8) Thêm vào company_members
     // Không gửi 'email' để không phụ thuộc cột email (email đã có trong auth.users).
@@ -184,8 +211,8 @@ exports.handler = async (event) => {
       return resp(400, { error: 'Tạo user xong nhưng thêm vào company_members lỗi (đã rollback)', stage: 'insert-member', ...describe(mErr) })
     }
 
-    console.log('[create-member] OK', { email, role, user_id: newId, company_id: me.company_id })
-    return resp(200, { ok: true, user_id: newId, email, role })
+    console.log('[create-member] OK', { email, username, role, user_id: newId, company_id: me.company_id })
+    return resp(200, { ok: true, user_id: newId, email, username, role })
   } catch (e) {
     console.error('[create-member] Lỗi không bắt được:', e && e.stack ? e.stack : e)
     return resp(500, { error: 'Lỗi máy chủ', stage: 'uncaught', ...describe(e) })

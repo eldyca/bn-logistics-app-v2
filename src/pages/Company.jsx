@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useAuth } from '../context/AuthContext'
 import { useOrders } from '../context/OrdersContext'
 import {
-  listMembers, adminCreateMember, removeMember,
+  listMembers, listMemberProfiles, adminCreateMember, removeMember,
   setMemberRole, setMemberPermissions, setMemberActive, adminResetMemberPassword,
 } from '../lib/supabase'
 import { exportOrders } from '../lib/exportCsv'
@@ -25,7 +25,9 @@ export default function Company() {
   const myId = user?.id
 
   const [members, setMembers] = useState([])
+  const [profiles, setProfiles] = useState({})
   const [email, setEmail] = useState('')
+  const [fullName, setFullName] = useState('')
   const [password, setPassword] = useState('')
   const [inviteRole, setInviteRole] = useState('staff')
   const [invitePerms, setInvitePerms] = useState({ ...DEFAULT_PERMS })
@@ -34,7 +36,10 @@ export default function Company() {
 
   const load = useCallback(async () => {
     try {
-      setMembers(await listMembers())
+      const ms = await listMembers()
+      setMembers(ms)
+      const profs = await listMemberProfiles(ms.map((m) => m.user_id))
+      setProfiles(profs)
     } catch (e) {
       setMsg(e.message || String(e))
     }
@@ -62,14 +67,13 @@ export default function Company() {
 
   async function doCreate() {
     setMsg(null)
-    if (!email.trim() || password.length < 6) {
-      setMsg('Email và mật khẩu tạm (≥ 6 ký tự) là bắt buộc')
-      return
-    }
+    if (!email.trim()) { setMsg('Bắt buộc nhập username hoặc email nhân viên'); return }
+    if (!fullName.trim()) { setMsg('Bắt buộc nhập tên nhân viên'); return }
+    if (password.length < 6) { setMsg('Mật khẩu khởi tạo phải từ 6 ký tự'); return }
     setCreating(true)
     try {
-      await adminCreateMember(email.trim(), password, inviteRole, invitePerms)
-      setEmail(''); setPassword(''); setInvitePerms({ ...DEFAULT_PERMS })
+      await adminCreateMember({ identifier: email.trim(), fullName: fullName.trim(), password, role: inviteRole, perms: invitePerms })
+      setEmail(''); setFullName(''); setPassword(''); setInvitePerms({ ...DEFAULT_PERMS })
       setMsg(t('company.created'))
       await load()
     } catch (e) {
@@ -105,11 +109,13 @@ export default function Company() {
           <div className="phead">{t('company.createMember')}</div>
           <div className="pbody">
             <div className="grid">
-              <div className="field tight"><label>{t('company.inviteEmail')}</label>
-                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="staff@email.com" autoComplete="off" /></div>
-              <div className="field tight"><label>{t('company.tempPassword')}</label>
-                <input type="text" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="≥ 6 ký tự" autoComplete="new-password" /></div>
+              <div className="field tight"><label>Username hoặc email nhân viên</label>
+                <input type="text" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="username hoặc staff@email.com" autoComplete="off" /></div>
+              <div className="field tight"><label>Tên nhân viên <span className="r">*</span></label>
+                <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Nguyễn Văn A" autoComplete="off" /></div>
             </div>
+            <div className="field tight" style={{ marginTop: 12 }}><label>Mật khẩu khởi tạo</label>
+              <input type="text" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="≥ 6 ký tự" autoComplete="new-password" /></div>
             <div className="field tight" style={{ marginTop: 12 }}><label>{t('company.role')}</label>
               <select value={inviteRole} onChange={(e) => setInviteRole(e.target.value)}>
                 <option value="staff">{t('company.staff')}</option>
@@ -131,7 +137,7 @@ export default function Company() {
               {creating ? '…' : t('company.createAccount')}
             </button>
             <p style={{ fontSize: 12, color: 'var(--muted)', marginTop: 8 }}>
-              Admin tự đưa email + mật khẩu tạm cho nhân viên (không gửi email mời).
+              Nhập username (không có @) hoặc email. Admin tự đưa mật khẩu cho nhân viên (không gửi email mời).
             </p>
           </div>
         </div>
@@ -146,7 +152,8 @@ export default function Company() {
               <div key={m.id} className="member-row">
                 <div className="member-head">
                   <span>
-                    {m.email}{' '}
+                    {(() => { const p = profiles[m.user_id] || {}; const nm = p.display_name || p.full_name; const u = p.username
+                      return <><b>{nm || m.email}</b>{u ? ' · @' + u : (nm ? ' · ' + m.email : '')} </> })()}
                     <span className="pill">{m.role === 'admin' ? t('company.admin') : t('company.staff')}</span>{' '}
                     {!m.active ? <span className="pill" style={{ background: 'var(--out,#c0392b)', color: '#fff' }}>{t('company.locked')}</span> : null}
                   </span>

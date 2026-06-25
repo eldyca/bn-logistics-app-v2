@@ -63,15 +63,22 @@ export async function getMembership() {
     company.ad_right = ads?.ad_right || ''
   }
 
-  // Cờ super_admin
+  // Cờ super_admin + tên hiển thị + username
   let isSuperAdmin = false
+  let displayName = ''
+  let username = ''
   const { data: prof } = await supabase
-    .from('user_profiles').select('is_super_admin').eq('user_id', user.id).maybeSingle()
-  if (prof && prof.is_super_admin) isSuperAdmin = true
+    .from('user_profiles').select('is_super_admin, full_name, display_name, username').eq('user_id', user.id).maybeSingle()
+  if (prof) {
+    if (prof.is_super_admin) isSuperAdmin = true
+    displayName = prof.display_name || prof.full_name || ''
+    username = prof.username || ''
+  }
+  if (!displayName) displayName = user.email || ''
 
   clearCompanyCache()
   _companyId = data.company_id
-  return { company_id: data.company_id, role: data.role, company, isSuperAdmin }
+  return { company_id: data.company_id, role: data.role, company, isSuperAdmin, displayName, username }
 }
 
 // Đổi mật khẩu của chính người dùng đang đăng nhập
@@ -141,21 +148,31 @@ export async function adminInviteMember(email, role = 'staff', perms = {}) {
   if (error) throw error
 }
 
-// Admin tạo TRỰC TIẾP tài khoản nhân viên (email + mật khẩu tạm) qua Netlify
-// Function (server-side dùng service_role). Không gửi email mời.
-export async function adminCreateMember(email, password, role = 'staff', perms = {}) {
+// Admin tạo TRỰC TIẾP tài khoản nhân viên qua Netlify Function (service_role).
+// identifier: username HOẶC email. fullName: tên nhân viên (bắt buộc).
+export async function adminCreateMember({ identifier, fullName, password, role = 'staff', perms = {} }) {
   const { data: { session } } = await supabase.auth.getSession()
   const token = session?.access_token
   if (!token) throw new Error('Chưa đăng nhập')
   const res = await fetch('/.netlify/functions/create-member', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-    body: JSON.stringify({ email, password, role, perms }),
+    body: JSON.stringify({ identifier, full_name: fullName, password, role, perms }),
   })
   let out = {}
   try { out = await res.json() } catch { /* ignore */ }
   if (!res.ok || out.error) throw new Error(out.error || ('Lỗi máy chủ (HTTP ' + res.status + ')'))
   return out
+}
+
+// Danh sách thành viên kèm tên/username từ user_profiles
+export async function listMemberProfiles(userIds) {
+  if (!userIds || !userIds.length) return {}
+  const { data } = await supabase
+    .from('user_profiles').select('user_id, full_name, display_name, username').in('user_id', userIds)
+  const map = {}
+  for (const p of data || []) map[p.user_id] = p
+  return map
 }
 
 // Danh sách thành viên: company_members là TABLE -> select trực tiếp, KHÔNG dùng RPC.

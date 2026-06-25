@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useOrders } from '../context/OrdersContext'
+import { useAuth } from '../context/AuthContext'
 import { num, fmt } from '../lib/format'
 import AddressFields from '../components/AddressFields'
 import PayoutAddress from '../components/PayoutAddress'
@@ -25,10 +26,18 @@ export default function CreateOrder() {
   const navigate = useNavigate()
   const { t } = useTranslation()
   const { orders, addOrder, updateOrder } = useOrders()
+  const { displayName, isAdmin } = useAuth()
   const editing = Boolean(id)
 
   const [form, setForm] = useState(EMPTY)
   const [busy, setBusy] = useState(false)
+
+  // Tạo đơn mới: tự điền "Nhân viên nhận đơn" = tên tài khoản đang đăng nhập
+  useEffect(() => {
+    if (editing) return
+    if (displayName) setForm((f) => (f.employee ? f : { ...f, employee: displayName }))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [displayName, editing])
 
   // Gợi ý người gửi/người nhận cũ theo Tên / Họ / Số điện thoại (lấy từ đơn đã lưu)
   const [sSug, setSSug] = useState([])
@@ -395,7 +404,10 @@ export default function CreateOrder() {
           <div className="field full tight"><label>{t('order.memo')}</label>
             <textarea value={form.tx.memo} onChange={(e) => set('tx', 'memo', e.target.value)} /></div>
           <div className="field full tight"><label>{t('order.employee')} <span className="r">*</span></label>
-            <input value={form.employee} onChange={(e) => setForm((f) => ({ ...f, employee: e.target.value }))} placeholder={t('order.employee')} /></div>
+            <input value={form.employee} onChange={(e) => setForm((f) => ({ ...f, employee: e.target.value }))}
+              placeholder={t('order.employee')} readOnly={!isAdmin}
+              style={!isAdmin ? { background: 'var(--bg-soft,#f1f1f4)', cursor: 'not-allowed' } : undefined}
+              title={!isAdmin ? 'Tự lấy theo tài khoản đang đăng nhập' : undefined} /></div>
         </div>
       </div>
 

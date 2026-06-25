@@ -41,7 +41,18 @@ export function AuthProvider({ children }) {
     return () => sub.subscription.unsubscribe()
   }, [loadMembership])
 
-  const signIn = (email, password) => supabase.auth.signInWithPassword({ email, password })
+  const signIn = async (identifier, password) => {
+    const id = (identifier || '').trim()
+    let email = id
+    // Không có '@' -> coi là username, tra email tương ứng để đăng nhập
+    if (id && !id.includes('@')) {
+      const { data, error } = await supabase.rpc('email_for_username', { p_username: id })
+      if (error) return { error }
+      if (!data) return { error: { message: 'Tài khoản không tồn tại' } }
+      email = data
+    }
+    return supabase.auth.signInWithPassword({ email, password })
+  }
   const signUp = (email, password) => supabase.auth.signUp({ email, password })
   const signOut = async () => {
     clearCompanyCache()
@@ -60,6 +71,9 @@ export function AuthProvider({ children }) {
         company: membership?.company || null,
         role: membership?.role || null,
         isSuperAdmin: membership?.isSuperAdmin || false,
+        isAdmin: membership?.role === 'admin' || membership?.isSuperAdmin || false,
+        displayName: membership?.displayName || session?.user?.email || '',
+        username: membership?.username || '',
         memberLoading,
         signIn,
         signUp,

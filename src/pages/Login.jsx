@@ -42,8 +42,8 @@ export default function Login() {
         {msg ? <div className={'banner ' + msg.type}>{msg.text}</div> : null}
 
         <div className="field">
-          <label>{t('auth.email')}</label>
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="ban@email.com" autoComplete="email" />
+          <label>Email hoặc tên đăng nhập</label>
+          <input type="text" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="email hoặc username" autoComplete="username" />
         </div>
         <div className="field">
           <label>{t('auth.password')}</label>
