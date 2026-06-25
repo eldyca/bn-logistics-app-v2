@@ -179,7 +179,8 @@ export default function CreateOrder() {
     if (!form.ben.phone.trim()) miss.push(t('order.receiverInfo'))
     if (!form.ben.first.trim() || !form.ben.last.trim()) miss.push(t('order.firstName'))
     if (num(form.tx.send) <= 0) miss.push(t('order.sendAmount'))
-    if (!form.employee.trim()) miss.push(t('order.employee'))
+    const employeeName = (form.employee || '').trim() || (displayName || '').trim()
+    if (!employeeName) miss.push(t('order.employee'))
     if (miss.length) {
       alert(t('order.fillRequired') + miss.join(', '))
       return
@@ -196,7 +197,7 @@ export default function CreateOrder() {
         tax: computed.tax, fee: computed.fee,
         pay: form.tx.pay, total: computed.total, memo: form.tx.memo.trim(),
       },
-      employee: form.employee.trim(),
+      employee: employeeName,
     }
     setBusy(true)
     try {
