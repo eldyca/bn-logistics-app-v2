@@ -96,12 +96,12 @@ function HeadRow({ co, order }) {
   return (
     <div className="rcpt-head">
       <div className="rcpt-bigttl">CUSTOMER RECEIPT</div>
-      <div className="rcpt-metarow">
-        <span><b>Order No:</b> {order.code}</span>
-        <span><b>Date / Ngày:</b> {fdate(order.createdAt)}</span>
-        <span><b>Status:</b> {STATUS_BI[order.status] || order.status}</span>
-        <span><b>Employee / Nhân viên:</b> {order.employee || '—'}</span>
-      </div>
+      <table className="rcpt-metarow"><tbody><tr>
+        <td><b>Order No:</b> {order.code}</td>
+        <td><b>Date / Ngày:</b> {fdate(order.createdAt)}</td>
+        <td><b>Status:</b> {STATUS_BI[order.status] || order.status}</td>
+        <td><b>Employee / Nhân viên:</b> {order.employee || '—'}</td>
+      </tr></tbody></table>
     </div>
   )
 }
@@ -147,10 +147,10 @@ export default function Receipt() {
         <div className="rcpt-page" id="receipt-sheet">
           <HeadRow co={co} order={order} />
           <Parties {...parts} />
-          <div className="rcpt-signs">
-            <div><div className="rcpt-sigline" />Sender's Signature (Chữ ký người gửi)</div>
-            <div><div className="rcpt-sigline" />Received By (Nhận bởi)</div>
-          </div>
+          <table className="rcpt-signs"><tbody><tr>
+            <td><div className="rcpt-sigline" />Sender's Signature (Chữ ký người gửi)</td>
+            <td><div className="rcpt-sigline" />Received By (Nhận bởi)</td>
+          </tr></tbody></table>
 
           <div className="rcpt-legal">
             {LEGAL.map((s, i) => (
@@ -176,16 +176,16 @@ export default function Receipt() {
 
           {/* Bản sao ở cuối trang */}
           <div className="rcpt-copydiv">— — — — — — — — — — &nbsp; COPY / BẢN SAO &nbsp; — — — — — — — — — —</div>
-          <div className="rcpt-copymeta">
-            <span><b>Order No:</b> {order.code}</span>
-            <span><b>Date / Ngày:</b> {fdate(order.createdAt)}</span>
-            <span><b>Employee / Nhân viên:</b> {order.employee || '—'}</span>
-          </div>
+          <table className="rcpt-copymeta"><tbody><tr>
+            <td><b>Order No:</b> {order.code}</td>
+            <td><b>Date / Ngày:</b> {fdate(order.createdAt)}</td>
+            <td><b>Employee / Nhân viên:</b> {order.employee || '—'}</td>
+          </tr></tbody></table>
           <Parties {...parts} />
-          <div className="rcpt-signs">
-            <div><div className="rcpt-sigline" />Sender's Signature (Chữ ký người gửi)</div>
-            <div><div className="rcpt-sigline" />Received By (Nhận bởi)</div>
-          </div>
+          <table className="rcpt-signs"><tbody><tr>
+            <td><div className="rcpt-sigline" />Sender's Signature (Chữ ký người gửi)</td>
+            <td><div className="rcpt-sigline" />Received By (Nhận bởi)</td>
+          </tr></tbody></table>
         </div>
       </div>
     </>
